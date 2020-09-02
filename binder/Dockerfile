@@ -5,6 +5,8 @@ FROM rocker/binder:4.0.2
 ARG NB_USER
 ARG NB_UID
 
+RUN /rocker_scripts/install_shiny_server.sh
+
 ## Copies your repo files into the Docker Container
 USER root
 COPY . ${HOME}
@@ -16,7 +18,6 @@ COPY binder ${HOME}
 ## Useful to create a setup on binder that is different from a
 ## clone of your repository
 RUN chown -R ${NB_USER} ${HOME}
-# RUN /rocker_scripts/install_shiny_server.sh
 
 ## Become normal user again
 USER ${NB_USER}
