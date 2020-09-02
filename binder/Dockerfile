@@ -16,7 +16,7 @@ COPY binder ${HOME}
 ## Useful to create a setup on binder that is different from a
 ## clone of your repository
 RUN chown -R ${NB_USER} ${HOME}
-RUN /rocker_scripts/install_shiny_server.sh
+# RUN /rocker_scripts/install_shiny_server.sh
 
 ## Become normal user again
 USER ${NB_USER}
