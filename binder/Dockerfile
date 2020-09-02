@@ -1,5 +1,5 @@
 ## Use a tag instead of "latest" for reproducibility
-FROM rocker/binder:4.0.2
+FROM rocker/binder:3.6.0
 
 # RUN /rocker_scripts/install_shiny_server.sh
 
