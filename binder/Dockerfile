@@ -1,11 +1,12 @@
 ## Use a tag instead of "latest" for reproducibility
 FROM rocker/binder:4.0.2
 
+RUN /rocker_scripts/install_shiny_server.sh
+
 ## Declares build arguments
 ARG NB_USER
 ARG NB_UID
 
-RUN /rocker_scripts/install_shiny_server.sh
 
 ## Copies your repo files into the Docker Container
 USER root
