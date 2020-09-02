@@ -1,0 +1,244 @@
+---
+title: "Learning `tidyselect`"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+gap <- readRDS("data/gap.rds")
+penguins <- readRDS("data/penguins.rds")
+```
+
+
+## Doing More with Multiple Columns using `tidyselect`
+
+You probably are familiar with doing operations on *rows* (such as `filter`) and on single *columns* (using `mutate`). 
+
+However, a very common use pattern is doing something with *multiple* columns in the data. And the `tidyselect` verbs help you with this. 
+
+Let's look at a couple common patterns for using `tidyselect` in your `dplyr` recipes.
+
+### Learning Objectives
+
+- **Understand** how `tidyselect` helper functions (`contains()`, `all_of()`) work with `select()`.
+- **Understand** how `where()` works with `select` and `.is*` functions
+- **Learn** how to combine helpers with `c()` and find the *complement* using `-`
+- **Apply** `across()` to work with `mutate()` to mutate multiple columns
+- **Apply** `across()` with `summarize()` to summarize multiple columns
+
+
+## `tidyselect` selection helpers
+
+At the heart of `tidyselect` are the *selection helpers*. These let you select variables in a dataset to do operations on, such as `summarize()` or `mutate`.
+
+- `everything()`
+- `starts_with()`
+- `ends_with()`
+- `contains()`
+- `any_of()`
+- `where()`
+
+We'll see that `where()` is a special case.
+
+Here's a couple of useful things you can do with this.
+
+### `penguins` overview
+
+Here's the `penguins` data for reference:
+
+```{r}
+penguins
+```
+
+
+### `contains()`
+
+Select all variables that contain "bill":
+
+```{r bill, exercise=TRUE}
+penguins %>%
+    select(contains("bill"))
+```
+
+### `all_of()`
+
+`all_of()` is a strict selector. This statement won't work because `blah` is not a column name in `penguins`:
+
+```{r allof, exercise=TRUE}
+selected_variables <- c("island", "year", "species", "blah")
+
+penguins %>%
+  select(all_of(selected_variables))
+```
+
+This will work:
+
+```{r allof2, exercise=TRUE}
+selected_variables <- c("island", "year", "species")
+
+penguins %>%
+  select(all_of(selected_variables))
+```
+
+What can you use `all_of()` for? If you have a vector or column names, you can use `all_of()` to select and automate a process for those columns.
+
+### `any_of()`
+
+`any_of()` is more permissive that `all_of()`. I have a list of variables in a `character` vector and I want to select them. I can use `any_of()`:
+
+```{r any_of, exercise=TRUE}
+selected_variables <- c("island", "year", "species", "blah")
+
+penguins %>%
+  select(any_of(selected_variables))
+```
+
+### `where()` a wrapper for `is.*` functions
+
+If you want to use a function like `is.integer` to select columns, you'll need to wrap it in a `where()`. 
+
+```{r where1, exercise=TRUE}
+penguins %>%
+  select(where(is.integer))
+```
+
+### Exercise
+
+Select the columns in `penguins` that are `factor`s.
+
+```{r where2, exercise=TRUE}
+penguins %>%
+  select(where(is.factor))
+```
+
+### Another use for `where()` 
+
+`where()` can be used with any logical function that can return a `TRUE/FALSE` for an entire vector. 
+
+Note we have to test whether the column is numeric before we can use `mean(.x) > 20` as a criteria, because this expression doesn't work for non-`numeric` vectors.
+
+```{r both, exercise=TRUE}
+penguins %>%
+  tidyr::drop_na() %>%
+  select(where(~ is.numeric(.x) && mean(.x) > 20))
+```
+
+## More Useful things to do with `tidyselect` helpers
+
+### Combining Multiple Helpers
+
+You can use `c()` to combine multiple helpers:
+
+```{r cc, exercise=TRUE}
+penguins %>%
+  select(c(species, contains("bill")))
+```
+
+### Using `-` with helpers
+
+You can use the `-` operator to return everything but the helper:
+
+```{r cc2, exercise=TRUE}
+penguins %>%
+  select(-contains("bill"))
+```
+
+
+## Use `mutate(across())` to do something to multiple columns
+
+`across()` is a function in `dplyr` 1.0 that lets you specify a set of columns that uses a set of criteria. If there is one pattern that makes your life easier, it is `across`.
+
+### Convert all character vectors to factors in a dataframe
+
+The basic syntax:
+
+```
+mutate(
+  across(
+    where(is.character), as.factor
+  )
+)
+```
+
+```{r mutaccwhere, exercise=TRUE}
+penguins %>%
+   mutate(across(where(is.factor), as.character))
+```
+
+### Exercise:
+
+Use `mutate(across())` to change everything that is a `integer` in `penguins` to a `double` using `as.double()`. 
+
+```{r mut_across, exercise=TRUE, exercise.lines=5}
+penguins %>%
+  mutate(across(where(is.character), as.factor))
+```
+
+```{r mut_across-solution}
+penguins %>%
+  mutate(across(where(is.integer), as.double))
+```
+
+### Exercise:
+
+Use `mutate(across())` to convert the Likert scale columns to `ordered` factors.
+
+```{r}
+gap[1:10,]
+```
+
+
+```{r gap1, exercise=TRUE}
+gap %>%
+  mutate(StudentId = as.character(StudentId)) %>%
+  mutate(across(is.integer, ordered))
+
+```
+
+## `summarize(across())`
+
+Building on what we've learned, we can use `across()` in `summarize()` to summarize multiple variables.
+
+```{r sum1, exercise=TRUE}
+penguins %>%
+  group_by(species) %>%
+  summarize(across(contains("bill"), mean, na.rm=TRUE))
+```
+
+This becomes especially useful when combined with `where`:
+
+```{r sum2, exercise=TRUE}
+penguins %>%
+  group_by(species) %>%
+  summarize(across(where(is.double), mean, na.rm=TRUE))
+```
+
+## Other verbs that have `cols` arguments
+
+### `tidyr::pivot_longer()`
+
+Another application that you might have not thought of is using `tidyselect` in `pivot_longer`. 
+
+Using `pivot_longer()` with variables that have "bill" in them. 
+
+```{r pivlong, exercise=TRUE}
+penguins %>%
+  pivot_longer(contains("bill"), names_to="metric", values_to="value")
+```
+
+Using `pivot_longer()` with variables that are `numeric`:
+
+```{r pivlong2, exercise=TRUE}
+penguins %>%
+  pivot_longer(where(is.numeric), names_to="metric",
+               values_to="value")
+```
+
+## For More Info
+
+I just realized that I inadvertently reproduced this article by Hadley Wickham. Sorry!
+
+[Column-wise Operations](https://dplyr.tidyverse.org/articles/colwise.html) from tidyverse.org
