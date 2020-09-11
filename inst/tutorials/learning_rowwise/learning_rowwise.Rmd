@@ -1,0 +1,152 @@
+---
+title: "Learning Advanced Row Grouping in the tidyverse: from rowwise() to purrr::map()"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(ggplot2)
+penguins <- readRDS("data/penguins.rds")
+```
+
+
+You’re probably familiar with `group_by()` as a way to calculate summaries over a set of groups in your data. 
+
+However, there are many other techniques in the tidyverse for grouping data that are extremely helpful when doing things like modeling, or resampling data. 
+
+Here’s a common workflow for doing things with `rowwise()`:
+
+1. Get your data into a list-column format with `nest_by()` or `resample()`
+2. Pipe your data into `rowwise()`
+3. Pipe `rowwise()` into `summary()`, `mutate()`, `do()`, or `map()` to do something with each unit of the data
+
+## `rowwise()` - running from a metadata frame about samples
+
+`rowwise()` lets you run operations one row at a time on the data. It’s a lot like `group_by()`, but it groups the data.frame by row, rather than group.
+
+This is especially useful when you have wide data where multiple columns need to be summarized. 
+
+### `rowwise() %>% summarize()`
+
+```{r}
+penguins %>%
+  rowwise() %>%
+  summarize(average_bill = mean(c(bill_length_mm, bill_depth_mm)))
+```
+
+### `rowwise()` and `tidyselect`: `c_across()`
+
+You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. Well, almost. You need to sub in `c_across()` for `across()`:
+
+
+### `rowwise() %>% mutate()`
+
+```{r}
+
+```
+
+## `nest_by()` - running the same model on different groups
+
+```{r}
+
+```
+
+`nest_by()` will take your data and put it into a *list-column* - you can think of a list-column as a vector, where each entry is another data frame.
+
+```{r nesting, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species)
+
+nested_penguins
+```
+
+Note that the list-column that contains the data is called `data`.
+
+How do we get data out? 
+
+```{r leaving-nest, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species)
+
+nested_penguins$data[[1]]
+```
+
+Data in a list column format can be really easily utilized by rowwise().
+
+```{r row_nest, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
+
+nested_penguins
+```
+
+List columns really come into their own when you need to build multiple models with different subsets of the data. 
+
+Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
+
+```{r model_nest, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
+
+model_penguins <- nested_penguins %>%
+  filter(n > 6) %>%
+  mutate(model = list(lm(bill_length_mm ~ flipper_length_mm, data=data))) %>%
+  summarize(n, broom::tidy(model)) %>%
+  filter(term == "flipper_length_mm")
+
+model_penguins %>%
+  filter(p.value < 0.05)
+```
+
+Here we're making multiple ggplots with each combination of species and sex. 
+
+```{r plot_pingu, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
+
+penguin_plots <- nested_penguins %>%
+  filter(n > 6) %>%
+  mutate(plots = list(ggplot(data) + 
+                        aes(x=flipper_length_mm, 
+                            y=bill_length_mm) + 
+                        geom_point() +
+                        geom_smooth(method="lm") +
+                        ggtitle(paste(species, sex, "n=", n)))) 
+
+penguin_plots[["plots"]]
+
+```
+
+More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
+
+
+## purrr::map() - when your function doesn’t exist()
+
+So far, we’ve managed to avoid defining our own functions. 
+
+But there’s a point where defining your own functions becomes really useful. There is a lot of customization that you can do.
+
+The main rule for using purrr::map() is:
+
+> Figure out how to do it once in a function, then run that function on each unit of the data.
+
+
+### rowwise() %>% map()
+
+### Step 1. get it into a list column or a list
+
+The great thing about list-columns is that they retain the information that you need to process each row alongside the data itself.
+
+### Step 2. write a function that works on each row
+
+### Step 3. use rowwise() %>% map() to apply your function
+
+
+## related: tune() and tune_grid()
+

@@ -32,5 +32,3 @@ If you don't have R installed on your machine, you can still run the tutorial by
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_tidyselect/
 
-
-
