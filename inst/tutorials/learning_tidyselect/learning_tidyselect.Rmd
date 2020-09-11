@@ -8,6 +8,7 @@ runtime: shiny_prerendered
 library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
+library(tidyr)
 gap <- readRDS("data/gap.rds")
 penguins <- readRDS("data/penguins.rds")
 ```
@@ -226,14 +227,14 @@ Using `pivot_longer()` with variables that have "bill" in them.
 
 ```{r pivlong, exercise=TRUE}
 penguins %>%
-  pivot_longer(contains("bill"), names_to="metric", values_to="value")
+  tidyr::pivot_longer(contains("bill"), names_to="metric", values_to="value")
 ```
 
 Using `pivot_longer()` with variables that are `numeric`:
 
 ```{r pivlong2, exercise=TRUE}
 penguins %>%
-  pivot_longer(where(is.numeric), names_to="metric",
+  tidyr::pivot_longer(where(is.numeric), names_to="metric",
                values_to="value")
 ```
 

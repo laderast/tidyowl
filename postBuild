@@ -1,1 +1,2 @@
 mv inst/tutorials/learning_tidyselect/ .
+mv inst/tutorials/learning_rowwise/ .
