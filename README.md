@@ -16,7 +16,7 @@ In other words, we're learning how to draw the f**king owl:
 
 ## Installation
 
-You can install the released version of tidyowl from [CRAN](https://CRAN.R-project.org) with:
+You can install the github version with the following commands:
 
 ``` r
 install.packages("remotes")
