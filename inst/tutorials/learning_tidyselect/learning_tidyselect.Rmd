@@ -164,6 +164,15 @@ mutate(
 )
 ```
 
+
+```{r}
+penguins %>%
+  group_by(species) %>%
+  mutate(across(starts_with("bill"), mean, na.rm=TRUE))
+```
+
+Applying a function to every variable that is a factor. Here, we're casting every column that is a `factor` to become `character`:
+
 ```{r mutaccwhere, exercise=TRUE}
 penguins %>%
    mutate(across(where(is.factor), as.character))
@@ -185,7 +194,7 @@ penguins %>%
 
 ### Exercise:
 
-Use `mutate(across())` to convert the Likert scale columns to `ordered` factors.
+Use `mutate(across())` to convert the Likert scale columns to `ordered` factors in the `gap` dataset. Here is a preview of the first few rows of `gap` to help you out.
 
 ```{r}
 gap[1:10,]
@@ -238,8 +247,24 @@ penguins %>%
                values_to="value")
 ```
 
+### `unite` multiple columns
+
+The `unite()` function allows you to paste together multiple columns into one. Here, we're making a unique id for each penguin.
+
+```{r unite, exercise=TRUE}
+penguins %>%
+  mutate(row_num=row_number()) %>%
+  tidyr::unite(col="unique_id", 
+               #make a unique id of the factor combos and the row number
+               c(where(is.factor), row_num))
+```
+
 ## For More Info
 
 I just realized that I inadvertently reproduced this article by Hadley Wickham. Sorry!
 
 [Column-wise Operations](https://dplyr.tidyverse.org/articles/colwise.html) from tidyverse.org
+
+This is a more technical description of how `tidyselect` works: 
+
+https://tidyselect.r-lib.org/articles/syntax.html

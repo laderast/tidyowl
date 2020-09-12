@@ -21,7 +21,7 @@ Here’s a common workflow for doing things with `rowwise()`:
 
 1. Get your data into a list-column format with `nest_by()` or `resample()`
 2. Pipe your data into `rowwise()`
-3. Pipe `rowwise()` into `summary()`, `mutate()`, `do()`, or `map()` to do something with each unit of the data
+3. Pipe `rowwise()` into `summary()`, `mutate()`, `do()`, or `map()` to do something with each row of the data.
 
 ## `rowwise()` - running from a metadata frame about samples
 
@@ -34,12 +34,17 @@ This is especially useful when you have wide data where multiple columns need to
 ```{r}
 penguins %>%
   rowwise() %>%
-  summarize(average_bill = mean(c(bill_length_mm, bill_depth_mm)))
+  summarize(species, average_bill = mean(c(bill_length_mm, bill_depth_mm)))
 ```
 
 ### `rowwise()` and `tidyselect`: `c_across()`
 
 You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. Well, almost. You need to sub in `c_across()` for `across()`:
+
+```{r}
+
+
+```
 
 
 ### `rowwise() %>% mutate()`
@@ -49,10 +54,6 @@ You might think that you can use `across()` to select columns with `tidyselect` 
 ```
 
 ## `nest_by()` - running the same model on different groups
-
-```{r}
-
-```
 
 `nest_by()` will take your data and put it into a *list-column* - you can think of a list-column as a vector, where each entry is another data frame.
 
@@ -65,7 +66,7 @@ nested_penguins
 
 Note that the list-column that contains the data is called `data`.
 
-How do we get data out? 
+How do we get data out? We can use the `[[]]` (double brackets) to extract the data directly:
 
 ```{r leaving-nest, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -74,7 +75,7 @@ nested_penguins <- penguins %>%
 nested_penguins$data[[1]]
 ```
 
-Data in a list column format can be really easily utilized by rowwise().
+Data in a list column format can be really easily utilized by rowwise(). Here, we're counting the number of rows in each row of `data`
 
 ```{r row_nest, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -125,8 +126,7 @@ penguin_plots[["plots"]]
 
 More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
 
-
-## purrr::map() - when your function doesn’t exist()
+## purrr::map() - when your function doesn’t exist
 
 So far, we’ve managed to avoid defining our own functions. 
 
@@ -134,14 +134,27 @@ But there’s a point where defining your own functions becomes really useful. T
 
 The main rule for using purrr::map() is:
 
-> Figure out how to do it once in a function, then run that function on each unit of the data.
+> Figure out how to do it once in a function, then run that function on each unit of the data, and return the appropriate unit of information
 
+### `rowwise() %>% map()`
 
-### rowwise() %>% map()
+Let's combine `nest_by()`, `rowwise()`, and `map_df()` into a single workflow.
 
 ### Step 1. get it into a list column or a list
 
 The great thing about list-columns is that they retain the information that you need to process each row alongside the data itself.
+
+```{r}
+
+
+penguins %>%
+  nest_by(species) %>%
+  rowwise() %>%
+  map()
+
+
+```
+
 
 ### Step 2. write a function that works on each row
 
@@ -150,3 +163,6 @@ The great thing about list-columns is that they retain the information that you 
 
 ## related: tune() and tune_grid()
 
+## For more info
+
+Rebecca Barter's post on `purrr::map()` is one of the most succinct and well done that I know of. http://www.rebeccabarter.com/blog/2019-08-19_purrr/

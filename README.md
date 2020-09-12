@@ -21,14 +21,26 @@ remotes::install_github("tidyowl")
 
 ## Run `learning_tidyselect`
 
-This is a basic example which shows you how to solve a common problem:
+To run the learning tidyselect tutorial:
 
 ``` r
 library(tidyowl)
-learnr::run_tutorial("learning_tidyselect", package="tidyowl")
+learn_tidyselect()
 ```
 
 If you don't have R installed on your machine, you can still run the tutorial by going to this mybinder.org link:
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_tidyselect/
 
+## Run `learning_rowwise`
+
+To run the learning rowwise tutorial:
+
+```r
+library(tidyowl)
+learn_rowwise()
+```
+
+If you don't have R installed, you can run the tutorial online by going to this mybinder.org link:
+
+https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_rowwise/
