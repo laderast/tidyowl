@@ -1,0 +1,84 @@
+---
+title: "Learning purrr"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## What is `purrr`?
+
+
+
+
+### Making your own functions.
+
+Maybe we have a plotting function we want to apply to our list-columns. Here we're making multiple ggplots with each combination of species and sex. 
+
+```{r plot_pingu, exercise=TRUE}
+p_plot <- function(data, species, sex){
+  ggplot(data) + 
+    aes(x=flipper_length_mm, 
+    y=bill_length_mm) + 
+    geom_point() +
+    geom_smooth(method="lm") +
+    ggtitle(paste(species, sex, "n=", n))
+}
+  
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
+
+penguin_plots <- nested_penguins %>%
+  filter(n > 6) %>%
+  mutate(plots = list(p_plot(data, species, sex)))
+
+penguin_plots[["plots"]]
+
+```
+
+
+
+## purrr::map() - when your function doesn’t exist
+
+So far, we’ve managed to avoid defining our own functions. 
+
+But there’s a point where defining your own functions becomes really useful. There is a lot of customization that you can do.
+
+The main rule for using purrr::map() is:
+
+> Figure out how to do it once in a function, then run that function on each unit of the data, and return the appropriate unit of information
+
+### `rowwise() %>% map()`
+
+Let's combine `nest_by()`, `rowwise()`, and `map_df()` into a single workflow.
+
+### Step 1. get it into a list column or a list
+
+The great thing about list-columns is that they retain the information that you need to process each row alongside the data itself.
+
+```{r}
+
+
+penguins %>%
+  nest_by(species) %>%
+  rowwise() %>%
+  map()
+
+
+```
+
+
+### Step 2. write a function that works on each row
+
+### Step 3. use rowwise() %>% map() to apply your function
+
+
+## related: tune() and tune_grid()
+
+## For more info
+
+Rebecca Barter's post on `purrr::map()` is one of the most succinct and well done that I know of. http://www.rebeccabarter.com/blog/2019-08-19_purrr/

@@ -1,5 +1,5 @@
 ---
-title: "Learning Advanced Row Grouping in the tidyverse: from rowwise() to purrr::map()"
+title: "Learning Advanced Row Grouping in the tidyverse: learning rowwise() and nest-by()"
 output: learnr::tutorial
 runtime: shiny_prerendered
 ---
@@ -23,6 +23,13 @@ Here’s a common workflow for doing things with `rowwise()`:
 2. Pipe your data into `rowwise()`
 3. Pipe `rowwise()` into `summary()`, `mutate()`, `do()`, or `map()` to do something with each row of the data.
 
+### Reminder: Penguins Data
+
+
+```{r}
+penguins
+```
+
 ## `rowwise()` - running from a metadata frame about samples
 
 `rowwise()` lets you run operations one row at a time on the data. It’s a lot like `group_by()`, but it groups the data.frame by row, rather than group.
@@ -31,29 +38,65 @@ This is especially useful when you have wide data where multiple columns need to
 
 ### `rowwise() %>% summarize()`
 
-```{r}
+```{r summ, exercise=TRUE}
 penguins %>%
   rowwise() %>%
-  summarize(species, average_bill = mean(c(bill_length_mm, bill_depth_mm)))
+  summarize(species, island, 
+            average_bill = mean(c(bill_length_mm, bill_depth_mm)))
 ```
 
-### `rowwise()` and `tidyselect`: `c_across()`
+### Try it Out
 
-You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. Well, almost. You need to sub in `c_across()` for `across()`:
+Calculate the `rowwise()` sum of `bill_length_mm` and `flipper_length_mm` as `sum_mm`. 
 
-```{r}
-
-
+```{r rowsum, exercise=TRUE}
+penguins %>%
+  rowwise() %>%
+  summarize(species, island,
+            sum_mm = ---------)
 ```
-
 
 ### `rowwise() %>% mutate()`
 
+In a `rowwise` workflow, you often want to apply a function to multiple columns. 
+
+```{r mutate, exercise=TRUE}
+penguins %>%
+  rowwise() %>%
+  select(species, island, bill_length_mm, bill_depth_mm) %>%
+  mutate(max_bill = max(
+    c(bill_length_mm, bill_depth_mm)
+    ))
+
+```
+
+
+
+
+## `rowwise()` and `tidyselect`: `c_across()`
+
+You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. 
+
+Well, almost. You need to sub in `c_across()` for `across()`. Here we're applying `min()` to find the minimum value of any column that contains "bill":
+
+```{r cacross, exercise=TRUE}
+penguins %>%
+  rowwise() %>%
+  select(species, island, bill_length_mm, bill_depth_mm) %>%
+  mutate(min_bill = min(c_across(contains("bill"))))
+```
+
+
+### Try it Out
+
 ```{r}
 
 ```
 
-## `nest_by()` - running the same model on different groups
+
+## `nest_by()` 
+
+Let's talk about restructuring our data to fit into a `rowwise()` workflow. One way we can do this is by packaging data into list-columns. A list column can contain a subsetted dataset, which makes it easier to do things such as run multiple models on different subsets of data.
 
 `nest_by()` will take your data and put it into a *list-column* - you can think of a list-column as a vector, where each entry is another data frame.
 
@@ -64,9 +107,9 @@ nested_penguins <- penguins %>%
 nested_penguins
 ```
 
-Note that the list-column that contains the data is called `data`.
+Note that the list-column that contains the data is called `data`. You can change this name by specifying the `.key` argument. 
 
-How do we get data out? We can use the `[[]]` (double brackets) to extract the data directly:
+How do we get data out? We can use `[[]]` (double brackets) to extract the data directly from a row:
 
 ```{r leaving-nest, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -75,19 +118,41 @@ nested_penguins <- penguins %>%
 nested_penguins$data[[1]]
 ```
 
-Data in a list column format can be really easily utilized by rowwise(). Here, we're counting the number of rows in each row of `data`
+Data in a list column format can be really easily utilized by a `rowwise()` workflow. Here, we're counting the number of rows in each row of `data`:
 
 ```{r row_nest, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species,sex) %>%
+  rowwise() %>%
   mutate(n = nrow(data))
 
 nested_penguins
 ```
 
+### Try it out
+
+Find the maximum `bill_length_mm` within each row. Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset. 
+
+```{r max_bill, exercise=TRUE}
+penguins %>%
+  nest_by(species,sex) %>%
+  rowwise() %>%
+  summarize(species, sex,
+    max_length = max(data$bill_length_mm))
+
+```
+
+## So What?
+
+We've only done things that you can easily do with a `group_by()/summarize()` statement so far. Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multiple models on data in a list-column.
+
+### Running lots of models on list-columns using `rowwise()`
+
 List columns really come into their own when you need to build multiple models with different subsets of the data. 
 
 Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
+
+We use `broom` here to extract the `p.value` from the model result
 
 ```{r model_nest, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -104,65 +169,40 @@ model_penguins %>%
   filter(p.value < 0.05)
 ```
 
-Here we're making multiple ggplots with each combination of species and sex. 
+### Exercise
 
-```{r plot_pingu, exercise=TRUE}
-nested_penguins <- penguins %>%
-  nest_by(species,sex) %>%
-  mutate(n = nrow(data))
-
-penguin_plots <- nested_penguins %>%
-  filter(n > 6) %>%
-  mutate(plots = list(ggplot(data) + 
-                        aes(x=flipper_length_mm, 
-                            y=bill_length_mm) + 
-                        geom_point() +
-                        geom_smooth(method="lm") +
-                        ggtitle(paste(species, sex, "n=", n)))) 
-
-penguin_plots[["plots"]]
+Use `nest_by()` to nest by data by `island` and run this linear model:
 
 ```
+lm(bill_depth_mm ~ bill_length_mm, data=data)
+```
 
-More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
+```{r nest2, exercise=TRUE}
+penguins %>%
+  nest_by(------) %>%
+  mutate(model = -------------)
+```
 
-## purrr::map() - when your function doesn’t exist
 
-So far, we’ve managed to avoid defining our own functions. 
+### Exercise
 
-But there’s a point where defining your own functions becomes really useful. There is a lot of customization that you can do.
+Run these two different models on the data and call them `model1` and `model2`. Extract the p-values for each using `broom::tidy()`
 
-The main rule for using purrr::map() is:
+```
+lm(bill_depth_mm ~ bill_length_mm, data=data)
+```
 
-> Figure out how to do it once in a function, then run that function on each unit of the data, and return the appropriate unit of information
+and
 
-### `rowwise() %>% map()`
-
-Let's combine `nest_by()`, `rowwise()`, and `map_df()` into a single workflow.
-
-### Step 1. get it into a list column or a list
-
-The great thing about list-columns is that they retain the information that you need to process each row alongside the data itself.
+```
+lm(bill_length_mm ~ flipper_length_mm, data=data)
+```
 
 ```{r}
 
-
-penguins %>%
-  nest_by(species) %>%
-  rowwise() %>%
-  map()
-
-
 ```
 
 
-### Step 2. write a function that works on each row
+More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
 
-### Step 3. use rowwise() %>% map() to apply your function
-
-
-## related: tune() and tune_grid()
-
-## For more info
-
-Rebecca Barter's post on `purrr::map()` is one of the most succinct and well done that I know of. http://www.rebeccabarter.com/blog/2019-08-19_purrr/
+Much more about applying many models to data here: https://r4ds.had.co.nz/many-models.html
