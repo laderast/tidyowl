@@ -12,16 +12,22 @@ library(ggplot2)
 penguins <- readRDS("data/penguins.rds")
 ```
 
+### Learning Objectives
+
+- *Learn* and *apply* `rowwise()` to produce row-by-row summaries
+- *Understand* what `c_across()` does
+- *Use* `nest_by()` to make list-columns
+- *Run* multiple statistical models on a list-column using `rowwise()`
+
 
 You’re probably familiar with `group_by()` as a way to calculate summaries over a set of groups in your data. 
-
 However, there are many other techniques in the tidyverse for grouping data that are extremely helpful when doing things like modeling, or resampling data. 
 
 Here’s a common workflow for doing things with `rowwise()`:
 
 1. Get your data into a list-column format with `nest_by()` or `resample()`
 2. Pipe your data into `rowwise()`
-3. Pipe `rowwise()` into `summary()`, `mutate()`, `do()`, or `map()` to do something with each row of the data.
+3. Pipe `rowwise()` into `summary()` or `mutate()` to do something with each row of the data.
 
 ### Reminder: Penguins Data
 
@@ -55,6 +61,22 @@ penguins %>%
   summarize(species, island,
             sum_mm = ---------)
 ```
+
+```{r rowsum-solution}
+penguins %>%
+  rowwise() %>%
+  summarize(species, island,
+            sum_mm = bill_length_mm + flipper_length_mm)
+```
+
+### `rowwise()` can be useful with wide data
+
+Sometimes you really don't want to deal with making a long data frame from a wide data frame. 
+
+```{r}
+
+```
+
 
 ### `rowwise() %>% mutate()`
 
@@ -115,7 +137,7 @@ How do we get data out? We can use `[[]]` (double brackets) to extract the data 
 nested_penguins <- penguins %>%
   nest_by(species)
 
-nested_penguins$data[[1]]
+nested_penguins$data[[2]]
 ```
 
 Data in a list column format can be really easily utilized by a `rowwise()` workflow. Here, we're counting the number of rows in each row of `data`:
@@ -152,9 +174,22 @@ List columns really come into their own when you need to build multiple models w
 
 Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
 
-We use `broom` here to extract the `p.value` from the model result
+```{r model_nest1, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
 
-```{r model_nest, exercise=TRUE}
+model_penguins <- nested_penguins %>%
+  filter(n > 6) %>%
+  mutate(model = list(lm(bill_length_mm ~ flipper_length_mm, data=data))) 
+
+model_penguins$model
+```
+
+
+Well, that's a little difficult to utilize. We use `broom::tidy` below to extract the `p.value` from the model result.
+
+```{r model_nest2, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species,sex) %>%
   mutate(n = nrow(data))
@@ -169,6 +204,10 @@ model_penguins %>%
   filter(p.value < 0.05)
 ```
 
+### `cur_data()`
+
+We've seen that the default name for our list-column created by `nest_by()` is called `data`. You can also refer to the data using `cur_data()`
+
 ### Exercise
 
 Use `nest_by()` to nest by data by `island` and run this linear model:
@@ -181,6 +220,12 @@ lm(bill_depth_mm ~ bill_length_mm, data=data)
 penguins %>%
   nest_by(------) %>%
   mutate(model = -------------)
+```
+
+```{r nest2-solution}
+penguins %>%
+  nest_by(island) %>%
+  mutate(model = lm(bill_depth_mm ~ bill_length_mm, data=data))
 ```
 
 
@@ -206,3 +251,5 @@ lm(bill_length_mm ~ flipper_length_mm, data=data)
 More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
 
 Much more about applying many models to data here: https://r4ds.had.co.nz/many-models.html
+
+Much more about row-oriented workflows here: https://github.com/jennybc/row-oriented-workflows

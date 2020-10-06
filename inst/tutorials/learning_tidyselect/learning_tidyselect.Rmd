@@ -97,7 +97,7 @@ penguins %>%
   select(any_of(selected_variables))
 ```
 
-### `where()` a wrapper for `is.*` functions
+### `where()`: a wrapper for `is.*` functions
 
 If you want to use a function like `is.integer` to select columns, you'll need to wrap it in a `where()`. 
 
@@ -112,8 +112,14 @@ Select the columns in `penguins` that are `factor`s.
 
 ```{r where2, exercise=TRUE}
 penguins %>%
+  select(where(--------))
+```
+
+```{r where2-solution}
+penguins %>%
   select(where(is.factor))
 ```
+
 
 ### Another use for `where()` 
 
@@ -204,9 +210,18 @@ gap[1:10,]
 ```{r gap1, exercise=TRUE}
 gap %>%
   mutate(StudentId = as.character(StudentId)) %>%
+  mutate(across(----------, --------))
+
+```
+
+
+```{r gap1-solution}
+gap %>%
+  mutate(StudentId = as.character(StudentId)) %>%
   mutate(across(is.integer, ordered))
 
 ```
+
 
 ## `summarize(across())`
 

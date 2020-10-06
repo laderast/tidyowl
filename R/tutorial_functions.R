@@ -27,3 +27,4 @@ learn_tidyselect <- function(){
 learn_rowwise <- function(){
   learnr::run_tutorial("learning_rowwise", package="tidyowl")
 }
+
