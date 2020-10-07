@@ -10,14 +10,17 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(ggplot2)
 penguins <- readRDS("data/penguins.rds")
+gap <- readRDS("data/gap.rds") %>%
+  mutate(StudentId = paste0("SID", StudentId))
 ```
 
 ### Learning Objectives
 
-- *Learn* and *apply* `rowwise()` to produce row-by-row summaries
-- *Understand* what `c_across()` does
-- *Use* `nest_by()` to make list-columns
-- *Run* multiple statistical models on a list-column using `rowwise()`
+- **Learn** and **apply** `rowwise()` to produce row-by-row summaries
+- **Understand** what `c_across()` does
+- **Use** `nest_by()` to make list-columns
+- **Access** the `data` in a list-column and **do** things with it.
+- **Run** multiple statistical models on a list-column using `rowwise()`
 
 
 You’re probably familiar with `group_by()` as a way to calculate summaries over a set of groups in your data. 
@@ -51,7 +54,7 @@ penguins %>%
             average_bill = mean(c(bill_length_mm, bill_depth_mm)))
 ```
 
-### Try it Out
+### Exercise
 
 Calculate the `rowwise()` sum of `bill_length_mm` and `flipper_length_mm` as `sum_mm`. 
 
@@ -69,13 +72,6 @@ penguins %>%
             sum_mm = bill_length_mm + flipper_length_mm)
 ```
 
-### `rowwise()` can be useful with wide data
-
-Sometimes you really don't want to deal with making a long data frame from a wide data frame. 
-
-```{r}
-
-```
 
 
 ### `rowwise() %>% mutate()`
@@ -93,8 +89,6 @@ penguins %>%
 ```
 
 
-
-
 ## `rowwise()` and `tidyselect`: `c_across()`
 
 You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. 
@@ -109,12 +103,32 @@ penguins %>%
 ```
 
 
-### Try it Out
+### Exercise
 
 ```{r}
 
 ```
 
+
+### `rowwise()` can be useful with wide data
+
+Sometimes you really don't want to deal with making a long data frame from a wide data frame. Usually, your collaborators expect wide data, and you can skip a bit of conversion by utilizing rowwise This is where `rowwise()` can really shine.
+
+Here's the `gap` dataset. One thing we might want to do is calculate the average score for all the numeric variables.
+
+```{r}
+head(gap)
+```
+
+Here we're using the wide format of this dataset to our advantage.
+
+```{r gap_mean, exercise=TRUE}
+gap %>%
+  rowwise() %>%
+  mutate(mean_score = 
+           mean(c_across(where(is.numeric)))
+         )
+```
 
 ## `nest_by()` 
 
@@ -151,7 +165,7 @@ nested_penguins <- penguins %>%
 nested_penguins
 ```
 
-### Try it out
+### Exercise
 
 Find the maximum `bill_length_mm` within each row. Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset. 
 
@@ -197,7 +211,7 @@ nested_penguins <- penguins %>%
 model_penguins <- nested_penguins %>%
   filter(n > 6) %>%
   mutate(model = list(lm(bill_length_mm ~ flipper_length_mm, data=data))) %>%
-  summarize(n, broom::tidy(model)) %>%
+  summarize(species, sex, n, broom::tidy(model)) %>%
   filter(term == "flipper_length_mm")
 
 model_penguins %>%
@@ -206,7 +220,9 @@ model_penguins %>%
 
 ### `cur_data()`
 
-We've seen that the default name for our list-column created by `nest_by()` is called `data`. You can also refer to the data using `cur_data()`
+We've seen that the default name for our list-column created by `nest_by()` is called `data`. You can also refer to the data using `cur_data()`:
+
+
 
 ### Exercise
 
@@ -231,7 +247,7 @@ penguins %>%
 
 ### Exercise
 
-Run these two different models on the data and call them `model1` and `model2`. Extract the p-values for each using `broom::tidy()`
+Nest the `penguins` data by `island`. Run these two different models on the data and call them `model1` and `model2`. Extract the p-values for each using `broom::tidy()`
 
 ```
 lm(bill_depth_mm ~ bill_length_mm, data=data)
@@ -243,7 +259,48 @@ and
 lm(bill_length_mm ~ flipper_length_mm, data=data)
 ```
 
+Here's a reminder of what `broom::tidy()` looks for an `lm()` model: 
+
 ```{r}
+tidy_result <- broom::tidy(lm(bill_length_mm ~ flipper_length_mm, data=penguins))
+
+tidy_result
+```
+
+Uh-oh. We want to be able to access the `p.value` for the second row. We can do this by using the `$` accessor to access the column, and then request the second value of the column.
+
+In other words:
+
+`tidy_result$p.value[2]`
+
+```{r}
+tidy_result$p.value[2]
+```
+
+
+```{r twomodels, exercise=TRUE}
+penguins %>%
+  nest_by(island) %>%
+  mutate(model1 = list(-------),
+         model2 = list(-------)
+         ) %>%
+  mutate(mod1pvalue = list(broom::tidy(model1)$p.value[2]),
+         mod2pvalue = ------)
+
+
+```
+
+
+```{r twomodels-solution}
+penguins %>%
+  nest_by(island) %>%
+  mutate(model1 = list(lm(bill_depth_mm ~ bill_length_mm, data=data)),
+         model2 = list(lm(bill_length_mm ~ flipper_length_mm, data=data))
+         ) %>%
+  mutate(mod1pvalue = broom::tidy(model1)$p.value[2],
+         mod2pvalue = broom::tidy(model2)$p.value[2]
+  )
+
 
 ```
 
