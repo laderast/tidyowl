@@ -22,9 +22,22 @@ learn_tidyselect <- function(){
 #'
 #' @examples
 #' if(is.interactive()){
-#' learn_rowwise()
+#'   learn_rowwise()
 #' }
 learn_rowwise <- function(){
   learnr::run_tutorial("learning_rowwise", package="tidyowl")
 }
 
+#' Run the learning purr tutorial
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' if(is.interactive()){
+#'   learn_purrr()
+#' }
+learn_purrr <- function(){
+  learnr::run_tutorial("learning_purrr", package="tidyowl")
+
+}

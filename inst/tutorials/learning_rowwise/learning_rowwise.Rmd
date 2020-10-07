@@ -14,7 +14,7 @@ gap <- readRDS("data/gap.rds") %>%
   mutate(StudentId = paste0("SID", StudentId))
 ```
 
-### Learning Objectives
+## Learning Objectives
 
 - **Learn** and **apply** `rowwise()` to produce row-by-row summaries
 - **Understand** what `c_across()` does
@@ -39,7 +39,8 @@ Here’s a common workflow for doing things with `rowwise()`:
 penguins
 ```
 
-## `rowwise()` - running from a metadata frame about samples
+
+## Intro to `rowwise()` 
 
 `rowwise()` lets you run operations one row at a time on the data. It’s a lot like `group_by()`, but it groups the data.frame by row, rather than group.
 
@@ -76,7 +77,7 @@ penguins %>%
 
 ### `rowwise() %>% mutate()`
 
-In a `rowwise` workflow, you often want to apply a function to multiple columns. 
+In a `rowwise` workflow, you often want to apply a function to multiple columns. You can specify columns using `c()`:
 
 ```{r mutate, exercise=TRUE}
 penguins %>%
@@ -93,7 +94,9 @@ penguins %>%
 
 You might think that you can use `across()` to select columns with `tidyselect` helpers such as `starts_with()` in a `rowwise()` workflow. 
 
-Well, almost. You need to sub in `c_across()` for `across()`. Here we're applying `min()` to find the minimum value of any column that contains "bill":
+Well, almost. You need to sub in `c_across()` for `across()`. 
+
+Here we're applying `min()` to find the minimum value of any column that contains "bill":
 
 ```{r cacross, exercise=TRUE}
 penguins %>%
@@ -105,8 +108,18 @@ penguins %>%
 
 ### Exercise
 
-```{r}
+Find the minimum value of any of the numeric columns using `where(is.numeric)`:
 
+```{r min1, exercise = TRUE}
+penguins %>%
+  rowwise() %>%
+  mutate(min_val = min(---------))
+```
+
+```{r min1-solution}
+penguins %>%
+  rowwise() %>%
+  mutate(min_val = min(c_across(where(is.numeric))))
 ```
 
 
@@ -130,9 +143,11 @@ gap %>%
          )
 ```
 
-## `nest_by()` 
+## `nest_by()` - making list-columns
 
-Let's talk about restructuring our data to fit into a `rowwise()` workflow. One way we can do this is by packaging data into list-columns. A list column can contain a subsetted dataset, which makes it easier to do things such as run multiple models on different subsets of data.
+Let's talk about restructuring our data to fit into a `rowwise()` workflow. 
+
+One way we can do this is by packaging data into *list-columns*. A cell of a *list-column* can contain a subsetted dataset, which makes it easier to do things such as run multiple models on different subsets of data.
 
 `nest_by()` will take your data and put it into a *list-column* - you can think of a list-column as a vector, where each entry is another data frame.
 
@@ -143,7 +158,9 @@ nested_penguins <- penguins %>%
 nested_penguins
 ```
 
-Note that the list-column that contains the data is called `data`. You can change this name by specifying the `.key` argument. 
+Note that the list-column that contains the data is named `data`. You can change this name by specifying the `.key` argument in `nest_by()`.
+
+### Getting data out of a list-column
 
 How do we get data out? We can use `[[]]` (double brackets) to extract the data directly from a row:
 
@@ -154,7 +171,11 @@ nested_penguins <- penguins %>%
 nested_penguins$data[[2]]
 ```
 
-Data in a list column format can be really easily utilized by a `rowwise()` workflow. Here, we're counting the number of rows in each row of `data`:
+### Using list-columns with `rowwise()`
+
+Data in a list column format can be really easily utilized by a `rowwise()` workflow. 
+
+Here, we're counting the number of rows in each row of `data`:
 
 ```{r row_nest, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -167,9 +188,19 @@ nested_penguins
 
 ### Exercise
 
-Find the maximum `bill_length_mm` within each row. Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset. 
+Use `nest_by()` to nest `penguins` by `species` and `sex`. Find the maximum `bill_length_mm` within each row. Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset in the `data` list-column. 
 
 ```{r max_bill, exercise=TRUE}
+penguins %>%
+  nest_by(species,sex) %>%
+  rowwise() %>%
+  summarize(species, sex,
+    max_length = max(---------))
+
+```
+
+
+```{r max_bill-solution}
 penguins %>%
   nest_by(species,sex) %>%
   rowwise() %>%
@@ -178,9 +209,11 @@ penguins %>%
 
 ```
 
-## So What?
+## Doing things with list-columns and `rowwise()`
 
-We've only done things that you can easily do with a `group_by()/summarize()` statement so far. Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multiple models on data in a list-column.
+We've only done things that you can easily do with a `group_by()/summarize()` statement so far. 
+
+Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multiple models on data in a list-column.
 
 ### Running lots of models on list-columns using `rowwise()`
 
@@ -211,11 +244,12 @@ nested_penguins <- penguins %>%
 model_penguins <- nested_penguins %>%
   filter(n > 6) %>%
   mutate(model = list(lm(bill_length_mm ~ flipper_length_mm, data=data))) %>%
-  summarize(species, sex, n, broom::tidy(model)) %>%
+  summarize(species, sex, n, broom::tidy(model)) 
+  
+model_penguins %>%
+  filter(p.value < 0.05) %>%
   filter(term == "flipper_length_mm")
 
-model_penguins %>%
-  filter(p.value < 0.05)
 ```
 
 ### `cur_data()`
@@ -245,19 +279,15 @@ penguins %>%
 ```
 
 
-### Exercise
+### Exercise (this one is tricky!)
 
-Nest the `penguins` data by `island`. Run these two different models on the data and call them `model1` and `model2`. Extract the p-values for each using `broom::tidy()`
+Nest the `penguins` data by `island`. Run the two different models below on the data and call them `model1` and `model2`. Extract the p-values for each model using `broom::tidy()`.
 
-```
-lm(bill_depth_mm ~ bill_length_mm, data=data)
-```
+`model1`: `lm(bill_depth_mm ~ bill_length_mm, data=data)`
 
 and
 
-```
-lm(bill_length_mm ~ flipper_length_mm, data=data)
-```
+`model2`: `lm(bill_length_mm ~ flipper_length_mm, data=data)`
 
 Here's a reminder of what `broom::tidy()` looks for an `lm()` model: 
 
@@ -269,7 +299,7 @@ tidy_result
 
 Uh-oh. We want to be able to access the `p.value` for the second row. We can do this by using the `$` accessor to access the column, and then request the second value of the column.
 
-In other words:
+In other words, we'll need: 
 
 `tidy_result$p.value[2]`
 
@@ -277,19 +307,15 @@ In other words:
 tidy_result$p.value[2]
 ```
 
-
 ```{r twomodels, exercise=TRUE}
 penguins %>%
   nest_by(island) %>%
   mutate(model1 = list(-------),
          model2 = list(-------)
          ) %>%
-  mutate(mod1pvalue = list(broom::tidy(model1)$p.value[2]),
+  mutate(mod1pvalue = broom::tidy(model1)$p.value[2],
          mod2pvalue = ------)
-
-
 ```
-
 
 ```{r twomodels-solution}
 penguins %>%
@@ -300,10 +326,9 @@ penguins %>%
   mutate(mod1pvalue = broom::tidy(model1)$p.value[2],
          mod2pvalue = broom::tidy(model2)$p.value[2]
   )
-
-
 ```
 
+## Going Further
 
 More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
 
