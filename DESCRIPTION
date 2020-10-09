@@ -7,7 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "tedladeras@gmail.com",
            comment = c(ORCID = "0000-0002-6207-7068"))
-Description: This is a set of tutorials for going further in the tidyverse.
+Description: This is a set of tutorials for going further in the tidyverse. 
 License: CC BY 4.0
 Encoding: UTF-8
 LazyData: true

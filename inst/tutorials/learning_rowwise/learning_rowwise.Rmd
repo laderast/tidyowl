@@ -1,7 +1,8 @@
 ---
-title: "Learning Advanced Row Grouping in the tidyverse: learning rowwise() and nest-by()"
+title: "Learning rowwise() and nest_by()"
 output: learnr::tutorial
 runtime: shiny_prerendered
+description: Learn about rowwise() and nest_by()
 ---
 
 ```{r setup, include=FALSE}
@@ -76,6 +77,8 @@ penguins %>%
 
 
 ### `rowwise() %>% mutate()`
+
+`summarize()` and `mutate()` are very similar in a rowwise() workflow. I think of `summarize()` as having a built-in `select()`, whereas `mutate()` will return the original data plus the new columns.
 
 In a `rowwise` workflow, you often want to apply a function to multiple columns. You can specify columns using `c()`:
 
@@ -219,7 +222,13 @@ Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multi
 
 List columns really come into their own when you need to build multiple models with different subsets of the data. 
 
+Here, we're using `mutate` to run `lm()` on each row of `data`. 
+
+Note that we have to wrap the output of `lm()` with `list()`, since the returned object is a list.
+
 Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
+
+However, if we access the `model` column, you'll notice that it just `print()`s the output of each fit.
 
 ```{r model_nest1, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -236,7 +245,22 @@ model_penguins$model
 
 Well, that's a little difficult to utilize. We use `broom::tidy` below to extract the `p.value` from the model result.
 
-```{r model_nest2, exercise=TRUE}
+```{r model_nesty, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species,sex) %>%
+  mutate(n = nrow(data))
+
+model_penguins <- nested_penguins %>%
+  filter(n > 6) %>%
+  mutate(model = list(lm(bill_length_mm ~ flipper_length_mm, data=data))) %>%
+  summarize(species, sex, n, broom::tidy(model)) 
+
+model_penguins
+```
+
+Now that we have our tidied results, we can filter. Because `broom::tidy()` has two terms (`flipper_length_mm` and the intercept) for our model, we'll need to filter for our term of interest, `flipper_length_mm`. We can also filter on `p.value`.
+
+```{r model_nest3, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species,sex) %>%
   mutate(n = nrow(data))
@@ -249,18 +273,12 @@ model_penguins <- nested_penguins %>%
 model_penguins %>%
   filter(p.value < 0.05) %>%
   filter(term == "flipper_length_mm")
-
 ```
-
-### `cur_data()`
-
-We've seen that the default name for our list-column created by `nest_by()` is called `data`. You can also refer to the data using `cur_data()`:
-
 
 
 ### Exercise
 
-Use `nest_by()` to nest by data by `island` and run this linear model:
+Use `nest_by()` to nest by data by `island` and run this linear model on each row of `data`.
 
 ```
 lm(bill_depth_mm ~ bill_length_mm, data=data)
@@ -275,7 +293,7 @@ penguins %>%
 ```{r nest2-solution}
 penguins %>%
   nest_by(island) %>%
-  mutate(model = lm(bill_depth_mm ~ bill_length_mm, data=data))
+  mutate(model = list(lm(bill_depth_mm ~ bill_length_mm, data=data)))
 ```
 
 
@@ -291,7 +309,7 @@ and
 
 Here's a reminder of what `broom::tidy()` looks for an `lm()` model: 
 
-```{r}
+```{r, echo=TRUE}
 tidy_result <- broom::tidy(lm(bill_length_mm ~ flipper_length_mm, data=penguins))
 
 tidy_result

@@ -2,6 +2,7 @@
 title: "Learning `tidyselect`"
 output: learnr::tutorial
 runtime: shiny_prerendered
+description: Learn more advanced techniques to select columns
 ---
 
 ```{r setup, include=FALSE}
