@@ -1,6 +1,3 @@
-- name: repo2docker Action
-  uses: jupyterhub/repo2docker-action@0.2
-
 name: Test
 on: push
 
@@ -20,3 +17,4 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         BINDER_CACHE: true
         PUBLIC_REGISTRY_CHECK: true
+
