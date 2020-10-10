@@ -7,8 +7,8 @@
 The goal of the `tidyowl` package is to provide some additional `learnr` tutorials as a path to learning how to do advanced things with the tidyverse, including:
 
 - `tidyselect`
-- `rowwise()`
 - `rowwise()/nest_by()`
+- `purrr`
 
 In other words, we're learning how to draw the f**king owl:
 
@@ -23,7 +23,21 @@ install.packages("remotes")
 remotes::install_github("tidyowl")
 ```
 
-## Run `learning_tidyselect`
+## `learning_tidyselect`
+
+`tidyselect` lets you programmatically select columns to do things with it. For example, you could select all of the columns in `penguins` that contains the string "bill". 
+
+This tutorial also covers `across` and other column-wise operations.
+
+### Learning Objectives for `learning_tidyselect`
+
+- **Understand** how `tidyselect` helper functions (`contains()`, `all_of()`) work with `select()`.
+- **Understand** how `where()` works with `select` and `.is*` functions
+- **Learn** how to combine helpers with `c()` and find the *complement* using `-`
+- **Apply** `across()` to work with `mutate()` to mutate multiple columns
+- **Apply** `across()` with `summarize()` to summarize multiple columns
+
+### Run this Tutorial
 
 To run the learning tidyselect tutorial:
 
@@ -32,11 +46,24 @@ library(tidyowl)
 learn_tidyselect()
 ```
 
-If you don't have R installed on your machine, you can still run the tutorial by going to this mybinder.org link:
+If you don't have R installed on your machine, you can still run the tutorial by going to this mybinder.org link (it may take a little time to launch, be patient):
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_tidyselect/
 
-## Run `learning_rowwise` (in development)
+## `learning_rowwise` (in development)
+
+Sometimes you need to calculate things row by row. In this tutorial, we cover the `rowwise()` workflow and use it with `mutate()`/`summarize()`. We also cover using `nest_by()` to make list-columns, and finally run multiple models on each row of a nested data frame.
+
+### Learning Objectives
+
+- **Learn** and **apply** `rowwise()` to produce row-by-row summaries
+- **Understand** what `c_across()` does
+- **Use** `nest_by()` to make list-columns
+- **Access** the `data` in a list-column and **do** things with it.
+- **Run** multiple statistical models on a list-column using `rowwise()`
+
+
+### Run this Tutorial
 
 To run the learning rowwise tutorial:
 
@@ -45,10 +72,10 @@ library(tidyowl)
 learn_rowwise()
 ```
 
-If you don't have R installed, you can run the tutorial online by going to this mybinder.org link:
+If you don't have R installed, you can run the tutorial online by going to this mybinder.org link (it may take a little time to launch, be patient):
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_rowwise/
 
 ## Code of Conduct
   
-  Please note that the tidyowl project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+Please note that the tidyowl project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
