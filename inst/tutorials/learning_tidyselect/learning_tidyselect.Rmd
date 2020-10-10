@@ -219,7 +219,7 @@ gap %>%
 ```{r gap1-solution}
 gap %>%
   mutate(StudentId = as.character(StudentId)) %>%
-  mutate(across(is.integer, ordered))
+  mutate(across(where(is.integer), ordered))
 
 ```
 

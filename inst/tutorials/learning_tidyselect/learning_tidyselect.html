@@ -296,8 +296,13 @@ penguins %&gt;%
 <div class="tutorial-exercise" data-label="gap1" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>gap %&gt;%
   mutate(StudentId = as.character(StudentId)) %&gt;%
-  mutate(across(is.integer, ordered))</code></pre>
+  mutate(across(----------, --------))</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
+</div>
+<div class="tutorial-exercise-support" data-label="gap1-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
+<pre class="text"><code>gap %&gt;%
+  mutate(StudentId = as.character(StudentId)) %&gt;%
+  mutate(across(where(is.integer), ordered))</code></pre>
 </div>
 </div>
 </div>
