@@ -6,10 +6,10 @@ description: Learn about rowwise() and nest_by()
 ---
 
 ```{r setup, include=FALSE}
-library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(ggplot2)
+library(learnr)
 penguins <- readRDS("data/penguins.rds")
 gap <- readRDS("data/gap.rds") %>%
   mutate(StudentId = paste0("SID", StudentId))
@@ -27,11 +27,6 @@ gap <- readRDS("data/gap.rds") %>%
 You’re probably familiar with `group_by()` as a way to calculate summaries over a set of groups in your data. 
 However, there are many other techniques in the tidyverse for grouping data that are extremely helpful when doing things like modeling, or resampling data. 
 
-Here’s a common workflow for doing things with `rowwise()`:
-
-1. Get your data into a list-column format with `nest_by()` or `resample()`
-2. Pipe your data into `rowwise()`
-3. Pipe `rowwise()` into `summary()` or `mutate()` to do something with each row of the data.
 
 ### Reminder: Penguins Data
 
@@ -43,17 +38,32 @@ penguins
 
 ## Intro to `rowwise()` 
 
-`rowwise()` lets you run operations one row at a time on the data. It’s a lot like `group_by()`, but it groups the data.frame by row, rather than group.
+`rowwise()` lets you run operations one row at a time on the data. It’s a lot like `group_by()`, but it groups the data.frame by row, rather than group. This is especially useful when you have wide data where multiple columns need to be utilzed. 
 
-This is especially useful when you have wide data where multiple columns need to be summarized. 
+Here’s a common workflow for doing things with `rowwise()`:
 
-### `rowwise() %>% summarize()`
+1. Get your data into a list-column format with `nest_by()` or `resample()`
+2. Pipe your data into `rowwise()`
+3. Pipe `rowwise()` into `mutate()` to do something with each row of the data.
+
+
+### `rowwise() %>% mutate()`
+
+One common pattern is to use `rowwise()` to calculate per-row variables. 
 
 ```{r summ, exercise=TRUE}
 penguins %>%
   rowwise() %>%
-  summarize(species, island, 
-            average_bill = mean(c(bill_length_mm, bill_depth_mm)))
+  mutate(average_bill = mean(c(bill_length_mm, bill_depth_mm))) %>%
+  select(species, island, average_bill)
+```
+
+Compare this to not using `rowwise()`:
+
+```{r summ2, exercise=TRUE}
+penguins %>%
+  mutate(average_bill = mean(c(bill_length_mm, bill_depth_mm))) %>%
+  select(species, island, average_bill)
 ```
 
 ### Exercise
@@ -63,33 +73,15 @@ Calculate the `rowwise()` sum of `bill_length_mm` and `flipper_length_mm` as `su
 ```{r rowsum, exercise=TRUE}
 penguins %>%
   rowwise() %>%
-  summarize(species, island,
-            sum_mm = ---------)
+  mutate(sum_mm = ---------) %>%
+  select(species, island, sum_mm)
 ```
 
 ```{r rowsum-solution}
 penguins %>%
   rowwise() %>%
-  summarize(species, island,
-            sum_mm = bill_length_mm + flipper_length_mm)
-```
-
-
-
-### `rowwise() %>% mutate()`
-
-`summarize()` and `mutate()` are very similar in a rowwise() workflow. I think of `summarize()` as having a built-in `select()`, whereas `mutate()` will return the original data plus the new columns.
-
-In a `rowwise` workflow, you often want to apply a function to multiple columns. You can specify columns using `c()`:
-
-```{r mutate, exercise=TRUE}
-penguins %>%
-  rowwise() %>%
-  select(species, island, bill_length_mm, bill_depth_mm) %>%
-  mutate(max_bill = max(
-    c(bill_length_mm, bill_depth_mm)
-    ))
-
+  mutate(sum_mm = bill_length_mm + flipper_length_mm) %>%
+  select(species, island, sum_mm)
 ```
 
 
@@ -174,9 +166,20 @@ nested_penguins <- penguins %>%
 nested_penguins$data[[2]]
 ```
 
+There is also `tidyr::unnest()` to unnest the data completely. You will need to provide a `cols` argument to specify that you want to unnest the `data` column, or R will throw a warning.
+
+```{r leaving-nest2, exercise=TRUE}
+nested_penguins <- penguins %>%
+  nest_by(species)
+
+nested_penguins %>%
+  tidyr::unnest(cols = c(data))
+```
+
+
 ### Using list-columns with `rowwise()`
 
-Data in a list column format can be really easily utilized by a `rowwise()` workflow. 
+Data in a list column format can be really easily utilized by a `rowwise()` workflow. We've packaged the other columns in a list-column called `data`, so our `mutate()` statements can use `data` to calculate anything we want. 
 
 Here, we're counting the number of rows in each row of `data`:
 
@@ -202,7 +205,6 @@ penguins %>%
 
 ```
 
-
 ```{r max_bill-solution}
 penguins %>%
   nest_by(species,sex) %>%
@@ -214,7 +216,7 @@ penguins %>%
 
 ## Doing things with list-columns and `rowwise()`
 
-We've only done things that you can easily do with a `group_by()/summarize()` statement so far. 
+So far, we've only done things that you can easily do with a `group_by()/summarize()` statement so far. 
 
 Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multiple models on data in a list-column.
 
@@ -224,7 +226,7 @@ List columns really come into their own when you need to build multiple models w
 
 Here, we're using `mutate` to run `lm()` on each row of `data`. 
 
-Note that we have to wrap the output of `lm()` with `list()`, since the returned object is a list.
+Note that we have to wrap the output of `lm()` with `list()` to get it to "fit" into the list column.
 
 Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
 
