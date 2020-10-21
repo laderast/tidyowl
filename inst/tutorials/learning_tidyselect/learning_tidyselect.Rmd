@@ -284,3 +284,9 @@ I just realized that I inadvertently reproduced this article by Hadley Wickham. 
 This is a more technical description of how `tidyselect` works: 
 
 https://tidyselect.r-lib.org/articles/syntax.html
+
+### Give Us Feedback
+
+Let us know what you think, whether you found it useful, or whether you found any mistakes in the tutorial. Your name and email are optional, but if you include and we use your feedback, we'll add you as a contributor. 
+
+https://ohsu.ca1.qualtrics.com/jfe/form/SV_50wLZCz9m1AMZTf

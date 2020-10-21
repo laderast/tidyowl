@@ -2,7 +2,7 @@
 title: "Learning rowwise() and nest_by()"
 output: learnr::tutorial
 runtime: shiny_prerendered
-description: Learn about rowwise() and nest_by()
+description: Learn about `rowwise()` and `nest_by()`
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +10,8 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(ggplot2)
 library(learnr)
-penguins <- readRDS("data/penguins.rds")
+penguins <- readRDS("data/penguins.rds") %>%
+  tidyr::drop_na(c(contains("bill")))
 gap <- readRDS("data/gap.rds") %>%
   mutate(StudentId = paste0("SID", StudentId))
 ```
@@ -27,9 +28,11 @@ gap <- readRDS("data/gap.rds") %>%
 You’re probably familiar with `group_by()` as a way to calculate summaries over a set of groups in your data. 
 However, there are many other techniques in the tidyverse for grouping data that are extremely helpful when doing things like modeling, or resampling data. 
 
+We'll highlight a workflow that lets you run data 1 row at a time.
 
 ### Reminder: Penguins Data
 
+We've dropped some of the incomplete cases so that the calculations make sense.
 
 ```{r}
 penguins
@@ -42,7 +45,7 @@ penguins
 
 Here’s a common workflow for doing things with `rowwise()`:
 
-1. Get your data into a list-column format with `nest_by()` or `resample()`
+1. Get your data into a list-column format with `nest_by()` or `resample()`, if necessary.
 2. Pipe your data into `rowwise()`
 3. Pipe `rowwise()` into `mutate()` to do something with each row of the data.
 
@@ -58,10 +61,11 @@ penguins %>%
   select(species, island, average_bill)
 ```
 
-Compare this to not using `rowwise()`:
+Compare this to not using `rowwise()`. The mutate statement only gives us one value for the entire data.frame, and it's repeated each row:
 
 ```{r summ2, exercise=TRUE}
 penguins %>%
+  tidyr::drop_na(contains("bill")) %>%
   mutate(average_bill = mean(c(bill_length_mm, bill_depth_mm))) %>%
   select(species, island, average_bill)
 ```
@@ -194,14 +198,16 @@ nested_penguins
 
 ### Exercise
 
-Use `nest_by()` to nest `penguins` by `species` and `sex`. Find the maximum `bill_length_mm` within each row. Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset in the `data` list-column. 
+Use `nest_by()` to nest `penguins` by `species` and `sex`. Find the maximum `bill_length_mm` within each row. 
+
+> Hint: you may have to use the `$` operator on `data` to access `bill_length_mm` for each dataset in the `data` list-column. 
 
 ```{r max_bill, exercise=TRUE}
 penguins %>%
   nest_by(species,sex) %>%
   rowwise() %>%
-  summarize(species, sex,
-    max_length = max(---------))
+  mutate(max_length = max(---------)) %>%
+  select(species, sex, max_length)
 
 ```
 
@@ -209,32 +215,32 @@ penguins %>%
 penguins %>%
   nest_by(species,sex) %>%
   rowwise() %>%
-  summarize(species, sex,
-    max_length = max(data$bill_length_mm))
-
+  mutate(max_length = max(data$bill_length_mm)) %>%
+  select(species, sex, max_length)
 ```
 
 ## Doing things with list-columns and `rowwise()`
 
 So far, we've only done things that you can easily do with a `group_by()/summarize()` statement so far. 
 
-Where `rowwise()/nest_by()` becomes extremely powerful is that you can run multiple models on data in a list-column.
+Where `rowwise()/nest_by()` becomes extremely powerful is that you can run a separate model on each data set in a list-column.
 
 ### Running lots of models on list-columns using `rowwise()`
 
-List columns really come into their own when you need to build multiple models with different subsets of the data. 
+List-columns really come into their own when you need to build multiple models with different subsets of the data. 
 
 Here, we're using `mutate` to run `lm()` on each row of `data`. 
 
-Note that we have to wrap the output of `lm()` with `list()` to get it to "fit" into the list column.
+Note that we have to wrap the output of `lm()` with `list()` to get it to "fit" into the list-column. (`data.frames` are special instances of a `list`, so they don't need to be wrapped up in a `list`.)
 
 Because we noted the number of rows in `data` for each row grouping, we can now filter on that before we apply a model. 
 
-However, if we access the `model` column, you'll notice that it just `print()`s the output of each fit.
+However, if we access the `model` column, you'll notice that it just `print()`s the output of each fit. That's not super helpful.
 
 ```{r model_nest1, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species,sex) %>%
+  rowwise() %>%
   mutate(n = nrow(data))
 
 model_penguins <- nested_penguins %>%
@@ -245,11 +251,12 @@ model_penguins$model
 ```
 
 
-Well, that's a little difficult to utilize. We use `broom::tidy` below to extract the `p.value` from the model result.
+Well, that's a little difficult to utilize. We can use `broom::tidy` below to extract the `p.value` from the model result. Notice there are two rows for each model within `species` and `sex`. The first row corresponds to the `intercept` term, and the second is the `flipper_length_mm` term. 
 
 ```{r model_nesty, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species,sex) %>%
+  rowwise() %>%
   mutate(n = nrow(data))
 
 model_penguins <- nested_penguins %>%
@@ -260,7 +267,7 @@ model_penguins <- nested_penguins %>%
 model_penguins
 ```
 
-Now that we have our tidied results, we can filter. Because `broom::tidy()` has two terms (`flipper_length_mm` and the intercept) for our model, we'll need to filter for our term of interest, `flipper_length_mm`. We can also filter on `p.value`.
+Now that we have our tidied results in `model penguins`, we can filter to get our results of interest. Because `broom::tidy()` has two terms (`flipper_length_mm` and the intercept) for our model, we'll need to filter for our term of interest, `flipper_length_mm`. We can also filter on `p.value`.
 
 ```{r model_nest3, exercise=TRUE}
 nested_penguins <- penguins %>%
@@ -289,12 +296,14 @@ lm(bill_depth_mm ~ bill_length_mm, data=data)
 ```{r nest2, exercise=TRUE}
 penguins %>%
   nest_by(------) %>%
+  rowwise() %>%
   mutate(model = -------------)
 ```
 
 ```{r nest2-solution}
 penguins %>%
   nest_by(island) %>%
+  rowwise() %>%
   mutate(model = list(lm(bill_depth_mm ~ bill_length_mm, data=data)))
 ```
 
@@ -317,7 +326,7 @@ tidy_result <- broom::tidy(lm(bill_length_mm ~ flipper_length_mm, data=penguins)
 tidy_result
 ```
 
-Uh-oh. We want to be able to access the `p.value` for the second row. We can do this by using the `$` accessor to access the column, and then request the second value of the column.
+Uh-oh. We want to be able to access the `p.value` for the second row, since it corresponds to the term we're interested in. We can do this by using the `$` accessor to access the column, and then request the second value of the column.
 
 In other words, we'll need: 
 
@@ -330,6 +339,7 @@ tidy_result$p.value[2]
 ```{r twomodels, exercise=TRUE}
 penguins %>%
   nest_by(island) %>%
+  rowwise() %>%
   mutate(model1 = list(-------),
          model2 = list(-------)
          ) %>%
@@ -340,6 +350,7 @@ penguins %>%
 ```{r twomodels-solution}
 penguins %>%
   nest_by(island) %>%
+  rowwise() %>%
   mutate(model1 = list(lm(bill_depth_mm ~ bill_length_mm, data=data)),
          model2 = list(lm(bill_length_mm ~ flipper_length_mm, data=data))
          ) %>%
@@ -348,10 +359,24 @@ penguins %>%
   )
 ```
 
+### One note
+
+`rowwise()` isn't strictly needed in the above workflows - `mutate()` is smart enough to realize that you want to run the model on each row of the nested data. 
+
+However, I think it's good practice to use `rowwise()` here, so it's clear that you want to process the list-column by row.
+
 ## Going Further
+
+This is just the tip of the iceberg with rowwise workflows and list-columns. They're extremely powerful tools.
 
 More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
 
 Much more about applying many models to data here: https://r4ds.had.co.nz/many-models.html
 
 Much more about row-oriented workflows here: https://github.com/jennybc/row-oriented-workflows
+
+### Give Us Feedback
+
+Let us know what you think, whether you found it useful, or whether you found any mistakes in the tutorial. Your name and email are optional, but if you include and we use your feedback, we'll add you as a contributor. 
+
+https://ohsu.ca1.qualtrics.com/jfe/form/SV_50wLZCz9m1AMZTf
