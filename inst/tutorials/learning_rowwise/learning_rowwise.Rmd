@@ -95,6 +95,8 @@ You might think that you can use `across()` to select columns with `tidyselect` 
 
 Well, almost. You need to sub in `c_across()` for `across()`. 
 
+`c_across()` uses the same arguments as `across()`: `cols`, to select the columns (which can use `tidyselect` helpers, like `across()`), and optionally, `.fns`, which is the function you want to apply to all the columns.
+
 Here we're applying `min()` to find the minimum value of any column that contains "bill":
 
 ```{r cacross, exercise=TRUE}
@@ -150,6 +152,14 @@ One way we can do this is by packaging data into *list-columns*. A cell of a *li
 
 `nest_by()` will take your data and put it into a *list-column* - you can think of a list-column as a vector, where each entry is another data frame.
 
+It will take variables to nest by input as either a list of variables, much like `group_by()`.
+
+```
+nest_by(species, sex)
+```
+
+or 
+
 ```{r nesting, exercise=TRUE}
 nested_penguins <- penguins %>%
   nest_by(species)
@@ -157,7 +167,12 @@ nested_penguins <- penguins %>%
 nested_penguins
 ```
 
-Note that the list-column that contains the data is named `data`. You can change this name by specifying the `.key` argument in `nest_by()`.
+Note that the list-column that contains the data is named `data`. You can change this name by specifying the `.key` argument in `nest_by()`:
+
+```{r nesting2, exercise = TRUE}
+penguins %>%
+  nest_by(species, sex, .key = "penguin_stuff")
+```
 
 ### Getting data out of a list-column
 
@@ -361,7 +376,7 @@ penguins %>%
 
 ### One note
 
-`rowwise()` isn't strictly needed in the above workflows - `mutate()` is smart enough to realize that you want to run the model on each row of the nested data. 
+`rowwise()` isn't strictly needed in the above workflows. `nest_by()` implies a `rowwise()` workflow, and `mutate()` is smart enough to realize that you want to run the model on each row of the nested data. 
 
 However, I think it's good practice to use `rowwise()` here, so it's clear that you want to process the list-column by row.
 
@@ -374,6 +389,12 @@ More info about list columns here: https://jennybc.github.io/purrr-tutorial/ls13
 Much more about applying many models to data here: https://r4ds.had.co.nz/many-models.html
 
 Much more about row-oriented workflows here: https://github.com/jennybc/row-oriented-workflows
+
+### Acknowledgements
+
+This tutorial was partially derived from the above links.
+
+Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more. 
 
 ### Give Us Feedback
 
