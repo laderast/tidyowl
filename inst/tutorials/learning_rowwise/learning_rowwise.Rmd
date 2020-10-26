@@ -129,7 +129,7 @@ penguins %>%
 
 ### `rowwise()` can be useful with wide data
 
-Sometimes you really don't want to deal with making a long data frame from a wide data frame. Usually, your collaborators expect wide data, and you can skip a bit of conversion by utilizing rowwise This is where `rowwise()` can really shine.
+Sometimes you really don't want to deal with making a long data frame from a wide data frame. Usually, your collaborators expect wide data, and you can skip a bit of conversion by utilizing rowwise. This is where `rowwise()` can really shine.
 
 Here's the `gap` dataset. One thing we might want to do is calculate the average score for all the numeric variables.
 
