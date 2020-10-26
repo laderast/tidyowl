@@ -76,6 +76,17 @@ If you don't have R installed, you can run the tutorial online by going to this 
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_rowwise/
 
+### Acknowledgements
+
+This tutorial was partially derived and inspired from the following links:
+
+- https://jennybc.github.io/purrr-tutorial/ls13_list-columns.html
+- https://r4ds.had.co.nz/many-models.html
+- https://github.com/jennybc/row-oriented-workflows
+
+Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more. Thanks to Garrick Aden-Buie for his suggestion about `sum_mm` and `sum()`.
+
+
 ## Code of Conduct
   
 Please note that the tidyowl project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/0/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.

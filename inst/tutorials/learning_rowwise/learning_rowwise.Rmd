@@ -61,7 +61,7 @@ penguins %>%
   select(species, island, average_bill)
 ```
 
-Compare this to not using `rowwise()`. The mutate statement only gives us one value for the entire data.frame, and it's repeated each row:
+Compare this to not using `rowwise()`. The `mutate()` statement only gives us one value for the entire data.frame, and it's repeated each row:
 
 ```{r summ2, exercise=TRUE}
 penguins %>%
@@ -72,7 +72,7 @@ penguins %>%
 
 ### Exercise
 
-Calculate the `rowwise()` sum of `bill_length_mm` and `flipper_length_mm` as `sum_mm`. 
+Calculate the `rowwise()` `sum()` of `bill_length_mm` and `flipper_length_mm` as `sum_mm`. 
 
 ```{r rowsum, exercise=TRUE}
 penguins %>%
@@ -84,7 +84,7 @@ penguins %>%
 ```{r rowsum-solution}
 penguins %>%
   rowwise() %>%
-  mutate(sum_mm = bill_length_mm + flipper_length_mm) %>%
+  mutate(sum_mm = sum(bill_length_mm, flipper_length_mm)) %>%
   select(species, island, sum_mm)
 ```
 
@@ -95,7 +95,10 @@ You might think that you can use `across()` to select columns with `tidyselect` 
 
 Well, almost. You need to sub in `c_across()` for `across()`. 
 
-`c_across()` uses the same arguments as `across()`: `cols`, to select the columns (which can use `tidyselect` helpers, like `across()`), and optionally, `.fns`, which is the function you want to apply to all the columns.
+`c_across()` uses the same arguments as `across()`: 
+
+- `cols`, to select the columns (which can use `tidyselect` helpers, like `across()`), 
+- and optionally, `.fns`, which is the function you want to apply to all the columns.
 
 Here we're applying `min()` to find the minimum value of any column that contains "bill":
 
@@ -394,7 +397,7 @@ Much more about row-oriented workflows here: https://github.com/jennybc/row-orie
 
 This tutorial was partially derived from the above links.
 
-Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more. 
+Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more. Thanks to Garrick Aden-Buie for his suggestion about `sum_mm` and `sum()`.
 
 ### Give Us Feedback
 

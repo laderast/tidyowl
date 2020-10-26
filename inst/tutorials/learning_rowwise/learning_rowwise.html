@@ -156,7 +156,7 @@ $(document).ready(function () {
   select(species, island, average_bill)</code></pre>
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
-<p>Compare this to not using <code>rowwise()</code>. The mutate statement only gives us one value for the entire data.frame, and it’s repeated each row:</p>
+<p>Compare this to not using <code>rowwise()</code>. The <code>mutate()</code> statement only gives us one value for the entire data.frame, and it’s repeated each row:</p>
 <div class="tutorial-exercise" data-label="summ2" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>penguins %&gt;%
   tidyr::drop_na(contains(&quot;bill&quot;)) %&gt;%
@@ -167,7 +167,7 @@ $(document).ready(function () {
 </div>
 <div id="section-exercise" class="section level3">
 <h3>Exercise</h3>
-<p>Calculate the <code>rowwise()</code> sum of <code>bill_length_mm</code> and <code>flipper_length_mm</code> as <code>sum_mm</code>.</p>
+<p>Calculate the <code>rowwise()</code> <code>sum()</code> of <code>bill_length_mm</code> and <code>flipper_length_mm</code> as <code>sum_mm</code>.</p>
 <div class="tutorial-exercise" data-label="rowsum" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>penguins %&gt;%
   rowwise() %&gt;%
@@ -178,7 +178,7 @@ $(document).ready(function () {
 <div class="tutorial-exercise-support" data-label="rowsum-solution" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>penguins %&gt;%
   rowwise() %&gt;%
-  mutate(sum_mm = bill_length_mm + flipper_length_mm) %&gt;%
+  mutate(sum_mm = sum(bill_length_mm, flipper_length_mm)) %&gt;%
   select(species, island, sum_mm)</code></pre>
 </div>
 </div>
@@ -187,7 +187,11 @@ $(document).ready(function () {
 <h2><code>rowwise()</code> and <code>tidyselect</code>: <code>c_across()</code></h2>
 <p>You might think that you can use <code>across()</code> to select columns with <code>tidyselect</code> helpers such as <code>starts_with()</code> in a <code>rowwise()</code> workflow.</p>
 <p>Well, almost. You need to sub in <code>c_across()</code> for <code>across()</code>.</p>
-<p><code>c_across()</code> uses the same arguments as <code>across()</code>: <code>cols</code>, to select the columns (which can use <code>tidyselect</code> helpers, like <code>across()</code>), and optionally, <code>.fns</code>, which is the function you want to apply to all the columns.</p>
+<p><code>c_across()</code> uses the same arguments as <code>across()</code>:</p>
+<ul>
+<li><code>cols</code>, to select the columns (which can use <code>tidyselect</code> helpers, like <code>across()</code>),</li>
+<li>and optionally, <code>.fns</code>, which is the function you want to apply to all the columns.</li>
+</ul>
 <p>Here we’re applying <code>min()</code> to find the minimum value of any column that contains “bill”:</p>
 <div class="tutorial-exercise" data-label="cacross" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>penguins %&gt;%
@@ -440,7 +444,7 @@ tidy_result</code></pre>
 <div id="section-acknowledgements" class="section level3">
 <h3>Acknowledgements</h3>
 <p>This tutorial was partially derived from the above links.</p>
-<p>Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more.</p>
+<p>Thanks to Rebecca Barter for suggesting that I flesh out the function descriptions some more. Thanks to Garrick Aden-Buie for his suggestion about <code>sum_mm</code> and <code>sum()</code>.</p>
 </div>
 <div id="section-give-us-feedback" class="section level3">
 <h3>Give Us Feedback</h3>
