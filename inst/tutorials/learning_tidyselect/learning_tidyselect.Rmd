@@ -262,6 +262,15 @@ penguins %>%
   tidyr::pivot_longer(where(is.numeric), names_to="metric",
                values_to="value")
 ```
+### `relocate()`: move a group of columns around
+
+The `relocate()` function in `dplyr` also takes `tidyselect` helpers. So if you wanted to move the `bill` columns to be first:
+
+```{r relocate, exercise=TRUE}
+penguins %>%
+  relocate(contains("bill"))
+```
+
 
 ### `unite` multiple columns
 
@@ -277,7 +286,7 @@ penguins %>%
 
 ## For More Info
 
-I just realized that I inadvertently reproduced this article by Hadley Wickham. Sorry!
+I just realized that I inadvertently reproduced this article by Hadley Wickham.
 
 [Column-wise Operations](https://dplyr.tidyverse.org/articles/colwise.html) from tidyverse.org
 

@@ -126,6 +126,24 @@ penguins %>%
   mutate(min_val = min(c_across(where(is.numeric))))
 ```
 
+### `ungroup()`ing a `rowwise()` `data.frame`
+
+One last thing. You've calculated something via `rowwise()`, but you no longer want your `data.frame` to be in a `rowwise()` workflow. 
+
+You can do this with `ungroup()`:
+
+```{r echo=TRUE}
+rowwise_penguins <- penguins %>%
+  rowwise() %>%
+  select(species, island, bill_length_mm, bill_depth_mm) %>%
+  mutate(min_bill = min(c_across(contains("bill"))))
+
+rowwise_penguins %>%
+  ungroup() %>%
+  mutate(bill_bill = max(bill_length_mm * bill_depth_mm))
+```
+
+
 
 ### `rowwise()` can be useful with wide data
 
