@@ -1,0 +1,195 @@
+---
+title: "Learning Lists"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(purrr)
+```
+
+## Learning Objectives
+
+- **Learn** about lists as a general purpose data structure
+- **Learn** and **utilize** list properties 
+- **Access** list elements using `$` and `[[]]`
+- **Understand** the difference between homogeneous and heterogeneous lists
+- **Use** `purrr::pluck()` to access list elements
+- **Understand** how `data.frames()` are list-like
+
+## What are lists?
+
+Lists are a general purpose data structure in R. They are very flexible, in that they have *slots*. A *slot* can contain anything: it could contain a `vector`, a `data.frame`, or even another list!
+
+Unlike vectors, a `list` can also be heterogeneous: each slot can contain a different data type.
+
+We'll start with a making a list and understand different properties about it.
+
+```{r list1, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list
+```
+
+`my_list` has some properties and ways to access things in it that are really useful. The first is that `my_list` has a `length()`
+
+```{r list2, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+length(my_list)
+```
+
+Additionally, because the elements are named, it also will give you the names:
+
+```{r list3, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+names(my_list)
+```
+
+We can access a single element in the list using a name and `$`:
+
+```{r list4, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list$cat_names
+```
+
+You can also access an element using the `[[]]` (double brackets) accessor:
+
+```{r list5, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list[[1]]
+```
+
+You can also pass a name here as a `character`:
+
+```{r list6, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list[["hedgehog_names"]]
+```
+
+Beware of the difference between `[[]]` and `[]`. The `[]` accessor returns a list of length 1 that is named `hedgehog_names`, not the element in it:
+
+```{r list7, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list["hedgehog_names"]
+```
+
+In most cases, you want to use `[[]]`.
+
+### Your Turn
+
+Find the length of the `cat_names` element in `my_list`:
+
+```{r list8, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+length(-------)
+```
+
+```{r list8-solution}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+length(my_list$cat_names)
+
+#this also works
+
+length(my_list[[1]])
+
+#this also works
+
+length(my_list[['cat_names']])
+```
+
+### `purrr::pluck()`
+
+The `purrr` package has an additional way to extract list elements: `purrr::pluck()`. 
+
+```{r pluck, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list %>%
+  pluck("cat_names")
+```
+
+This can be a handy way to extract something from a list within a list element.
+
+## Putting things into Lists
+
+The slots in a `list` are not fixed. We can take an already made list and add to it.
+
+```{r}
+
+```
+
+
+## *homogeneous* versus *heterogeneous* lists
+
+When we automate a repetitive process, we usually assume that the lists that we process are *homogeneous*. That is, the data type of the list element is the same for each slot in the list.
+
+However, another common pattern is to return a *heterogenous* list from a function. For example, the `lm()` function actually returns a list.
+
+```{r}
+
+```
+
+
+
+## `data.frame`s are list-like
+
+One last note. You might know that you can access columns in a `data.frame` using `$`. This is because a `data.frame` is a special *instance* of a list.
+
+Hence, you can use all of the above accessors to manipulate variables in a `data.frame`.
+
+```{r echo=TRUE}
+data(mtcars)
+
+length(mtcars)
+
+mtcars$mpg
+
+mtcars[[1]]
+
+mtcars[["mpg"]]
+```
+
+A common pattern in Base-R for filtering that you should be aware of is using the `$` operator for filtering on rows:
+
+```{r echo=TRUE}
+mtcars[mtcars$cyl == 8,]
+
+```
+
+## Lists and Vectors
+
+Vectors are a special instance of lists, in that each element can have a name. However, they are known as an *atomic* data type in R. They each have format restrictions.
+
+Let's do something with the three data files in the `data` folder. First, we need to use a command called `list.files()` to list the files in the data folder.
+
