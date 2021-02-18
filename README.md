@@ -20,7 +20,7 @@ You can install the github version with the following commands:
 
 ``` r
 install.packages("remotes")
-remotes::install_github("tidyowl")
+remotes::install_github("laderast/tidyowl")
 ```
 
 ## `learning_tidyselect`
