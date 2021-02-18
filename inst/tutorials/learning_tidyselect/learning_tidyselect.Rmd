@@ -65,6 +65,26 @@ penguins %>%
     select(contains("bill"))
 ```
 
+Note that by default, `contains()`, `starts_with()`, `ends_with()`, and `match()` are not case sensitive. To enable this, set `ignore.case = FALSE`.
+
+For example, this won't match anything because `"Bill"` is capitalized: 
+
+```{r bill2, exercise=TRUE}
+penguins %>%
+    select(contains("Bill", ignore.case=FALSE))
+```
+`starts_with()`, and `ends_with()` are convenient to match the beginning and ending of strings.
+
+```{r}
+
+```
+
+If you want to use regular expressions, `match()` is your friend:
+
+```{r}
+
+```
+
 ### `all_of()`
 
 `all_of()` is a strict selector. This statement won't work because `blah` is not a column name in `penguins`:
@@ -293,6 +313,10 @@ I just realized that I inadvertently reproduced this article by Hadley Wickham.
 This is a more technical description of how `tidyselect` works: 
 
 https://tidyselect.r-lib.org/articles/syntax.html
+
+### Acknowledgements
+
+Thanks to the PDX R User group for all of their questions, especially Aaron M, for asking about case sensitivity of `contains()` and the other matching functions.
 
 ### Give Us Feedback
 

@@ -9,6 +9,8 @@ library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(purrr)
+library(palmerpenguins)
+data(penguins)
 ```
 
 ## Learning Objectives
@@ -19,6 +21,7 @@ library(purrr)
 - **Understand** the difference between homogeneous and heterogeneous lists
 - **Use** `purrr::pluck()` to access list elements
 - **Understand** how `data.frames()` are list-like
+- **Understand** how to apply a function to a list.
 
 ## What are lists?
 
@@ -66,7 +69,7 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list$cat_names
 ```
 
-You can also access an element using the `[[]]` (double brackets) accessor:
+You can also access an element using the `[[]]` (double brackets) accessor to access an element in order. Here we're accessing the first element of a list.
 
 ```{r list5, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
@@ -76,7 +79,7 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list[[1]]
 ```
 
-You can also pass a name here as a `character`:
+You can also pass a name here as a `character`, if the slots are named.
 
 ```{r list6, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
@@ -98,6 +101,8 @@ my_list["hedgehog_names"]
 
 In most cases, you want to use `[[]]`.
 
+
+
 ### Your Turn
 
 Find the length of the `cat_names` element in `my_list`:
@@ -110,25 +115,10 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 length(-------)
 ```
 
-```{r list8-solution}
-my_list <- list(cat_names = c("Morris", "Julia"), 
-                hedgehog_names = "Spiny", 
-                dog_names = c("Rover", "Spot"))
-
-length(my_list$cat_names)
-
-#this also works
-
-length(my_list[[1]])
-
-#this also works
-
-length(my_list[['cat_names']])
-```
 
 ### `purrr::pluck()`
 
-The `purrr` package has an additional way to extract list elements: `purrr::pluck()`. 
+The `purrr` package has an additional way to extract list elements: `purrr::pluck()`. This can be a handy way to get a single list element.
 
 ```{r pluck, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
@@ -141,25 +131,78 @@ my_list %>%
 
 This can be a handy way to extract something from a list within a list element.
 
-## Putting things into Lists
+### Your Turn
 
-The slots in a `list` are not fixed. We can take an already made list and add to it.
+Try the following code. What did it return? 
+
+Did it return a `data.frame`, or a vector?
 
 ```{r}
-
+penguins %>%
+  pluck("species")
 ```
 
 
-## *homogeneous* versus *heterogeneous* lists
+## Putting things into Lists
 
-When we automate a repetitive process, we usually assume that the lists that we process are *homogeneous*. That is, the data type of the list element is the same for each slot in the list.
+The slots in a `list` are not fixed. We can take an already made list and add a new slot to it using `<-`:
+
+```{r}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_list$raccoon_names <- c("Rocky")
+
+my_list
+```
+
+
+### *homogeneous* versus *heterogeneous* lists
+
+When we automate a repetitive process, we usually assume that the lists that we process are *homogeneous*. That is, the data type of the list element is the same for each slot in the list. In our case, usually the data.type will be a `data.frame`
 
 However, another common pattern is to return a *heterogenous* list from a function. For example, the `lm()` function actually returns a list.
 
-```{r}
+```{r output_sum, exercise=TRUE}
+output <- lm(body_mass_g ~ bill_length_mm, data=penguins)
+sum_output <- summary(output)
 
+#show that sum_output is a list
+names(sum_output)
+
+sum_output$coefficients
 ```
 
+You often return a heterogeneous list when you are returning multiple objects from a function:
+
+```{r function1, exercise=TRUE}
+run_penguin_model <- function(species = "Torgersen") {
+  
+  subset_penguins <- penguins %>%
+    filter(species == species)
+    
+  output <- summary(lm(body_mass_g ~ bill_length_mm, data=subset_penguins))
+  
+  out_list <- list(coefficients = output$coefficients, call = output$call)
+  
+  return(out_list)
+}
+
+output_model <- run_penguin_model("Torgersen")
+
+output_model
+```
+
+
+### Your Turn
+
+From `output_model`, return the `call` slot.
+
+```{r}
+output_model$
+
+```
 
 
 ## `data.frame`s are list-like
@@ -168,7 +211,7 @@ One last note. You might know that you can access columns in a `data.frame` usin
 
 Hence, you can use all of the above accessors to manipulate variables in a `data.frame`.
 
-```{r echo=TRUE}
+```{r df, exercise=TRUE}
 data(mtcars)
 
 length(mtcars)
@@ -180,16 +223,86 @@ mtcars[[1]]
 mtcars[["mpg"]]
 ```
 
-A common pattern in Base-R for filtering that you should be aware of is using the `$` operator for filtering on rows:
+A common pattern in Base-R for filtering that you should be aware of is using the `$` operator for filtering on rows. The `tidyverse` simplifies this with `filter()`, but this pattern is often used with objects in Bioconductor.
 
-```{r echo=TRUE}
+```{r df2, echo=TRUE}
 mtcars[mtcars$cyl == 8,]
+```
+
+## Applying a function to a list using `map()`
+
+Let's make a function:
+
+```{r get_first, exercise=TRUE}
+get_first_element <- function(input_list){
+  return(input_list[[1]])
+}
 
 ```
 
-## Lists and Vectors
+We can *apply* this function to each element of a list. This is usually easiest if the list is homogeneous.
 
-Vectors are a special instance of lists, in that each element can have a name. However, they are known as an *atomic* data type in R. They each have format restrictions.
+The function we use is called `map()`. `map()` usually takes two inputs:
 
-Let's do something with the three data files in the `data` folder. First, we need to use a command called `list.files()` to list the files in the data folder.
+- the list to process
+- the function to process them with
 
+Note that we don't call `get_first_element()` with the parentheses. 
+
+```{r}
+new_list <- map(my_list, get_first_element)
+new_list
+```
+
+Next time we will use `map()` to load in multiple `data.frame`s from files in a folder.
+
+# Test Yourself
+
+## Question 1 (2 Points)
+
+Load the following list using `readRDS()` - an RDS file is a way to save a single R object as a file (you can write them using `saveRDS()`). 
+
+What are the names of slots on the list? (show the function)
+
+```{r}
+dfs <- readRDS("data/list_structure.rds")
+
+
+```
+
+What is in each slot? Just put your answer below.
+
+## Question 2 (2 Points)
+
+Use `bind_rows()` on the first and third element of `dfs`:
+
+```{r}
+bind_df <- bind_rows(------, -------)
+```
+
+## Question 3 (2 Points)
+
+Find the maximum `age_at_diagnosis` for `dfs[["smoke_2.xlsx"]]`: (remember, you can use `summarize`)
+
+```{r}
+
+
+```
+
+## Question 4 (2 Points)
+
+Write a function that finds the maximum `age_at_diagnosis` on a data.frame. Use it on the second element of `dfs`.
+
+```{r}
+find_max_age <- function(df){
+  max_age <- df %>%
+    ---------
+  return()
+}
+
+find_max_age()
+```
+
+## Question 5 (2 Points)
+
+5. Try out a different theme/options for this `html_document`, or make it into a `distill::distill_article`. Add a table of contents and section numbering.
