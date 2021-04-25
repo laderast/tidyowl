@@ -10,7 +10,7 @@ Authors@R:
 Description: This is a set of tutorials for going further in the tidyverse. 
 License: CC BY 4.0
 Encoding: UTF-8
-Depends: R (>= 4.0.1)
+Depends: R (>= 3.6.3)
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
