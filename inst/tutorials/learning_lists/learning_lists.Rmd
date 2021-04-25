@@ -19,6 +19,21 @@ get_first_element <- function(input_list){
 my_list <- list(cat_names = c("Morris", "Julia"), 
                 hedgehog_names = "Spiny", 
                 dog_names = c("Rover", "Spot"))
+
+run_penguin_model <- function(species = "Torgersen") {
+  
+  subset_penguins <- penguins %>%
+    filter(species == species)
+    
+  output <- summary(lm(body_mass_g ~ bill_length_mm, data=subset_penguins))
+  
+  out_list <- list(coefficients = output$coefficients, 
+                   call = output$call)
+  
+  return(out_list)
+}
+
+output_model <- run_penguin_model("Torgersen")
 ```
 
 ## Learning Objectives
@@ -99,9 +114,23 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list[["hedgehog_names"]]
 ```
 
+The main advantage using this as an accessor is that you can pass in a `character` vector in, which is handy for programming.
+
+```{r list7, exercise = TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+animal <- c("cat_names")
+
+my_list[[animal]]
+```
+
+### Caution: Don't use `[]` instead of `[[]]`
+
 Beware of the difference between `[[]]` and `[]`. The `[]` accessor returns a list of length 1 that is named `hedgehog_names`, not the element in it:
 
-```{r list7, exercise=TRUE}
+```{r list9, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
                 hedgehog_names = "Spiny", 
                 dog_names = c("Rover", "Spot"))
@@ -109,9 +138,17 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list["hedgehog_names"]
 ```
 
-In most cases, you want to use `[[]]`.
+In most cases, you want to use `[[]]`. The only reason to use `[]` is if you want to subset the list:
 
+```{r list10, exercise=TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
 
+animals <- c("cat_names", "dog_names")
+
+my_list[animals]
+```
 
 ### Your Turn
 
@@ -180,6 +217,34 @@ my_list
 ```
 
 
+### Your Turn
+
+Try adding a `bat_names` slot with `bats`. What position is it added in? 
+
+```{r adding_list2, exercise = TRUE}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+bats <- c("Vlad", "Scab")
+
+my_list[[------]] <- bats
+```
+
+```{r adding_list2-solution}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+bats <- c("Vlad", "Scab")
+
+my_list[["bat_names"]] <- bats
+
+#bat_names is added in the 4th position of the list:
+my_list[[4]]
+```
+
+
 ## *homogeneous* versus *heterogeneous* lists
 
 When we automate a repetitive process, we usually assume that the lists that we process are *homogeneous*. That is, the data type of the list element is the same for each slot in the list. In our case, usually the data.type will be a `data.frame`
@@ -206,7 +271,8 @@ run_penguin_model <- function(species = "Torgersen") {
     
   output <- summary(lm(body_mass_g ~ bill_length_mm, data=subset_penguins))
   
-  out_list <- list(coefficients = output$coefficients, call = output$call)
+  out_list <- list(coefficients = output$coefficients, 
+                   call = output$call)
   
   return(out_list)
 }
@@ -268,7 +334,7 @@ get_first_element <- function(input_list){
 
 We can *apply* this function to each element of a list. This is usually easiest if the list is homogeneous.
 
-The function we use is called `map()`. `map()` usually takes two inputs:
+The function we use is called `map()` from the `purrr` package. `map()` usually takes two inputs:
 
 - the list to process
 - the function to process them with
