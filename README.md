@@ -8,7 +8,7 @@ The goal of the `tidyowl` package is to provide some additional `learnr` tutoria
 
 - `tidyselect`
 - `rowwise()/nest_by()`
-- `purrr`
+- understanding `list`s
 
 In other words, we're learning how to draw the f**king owl:
 
@@ -88,7 +88,7 @@ Thanks to Rebecca Barter for suggesting that I flesh out the function descriptio
 
 
 
-## Learning Lists
+## `learning_lists`
 
 ### Learning Objectives
 
@@ -102,7 +102,7 @@ Thanks to Rebecca Barter for suggesting that I flesh out the function descriptio
 
 ### Run This Tutorial
 
-To run the learning lists tutorial:
+To run the `learning_lists` tutorial:
 
 ```r
 library(tidyowl)

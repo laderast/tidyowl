@@ -30,7 +30,7 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 - **Understand** the difference between homogeneous and heterogeneous lists
 - **Use** `purrr::pluck()` to access list elements
 - **Understand** how `data.frames()` are list-like
-- **Understand** how to apply a function to a list.
+- **Understand** how to apply a function to a list using `purrr::map()`.
 
 ## What are lists?
 
