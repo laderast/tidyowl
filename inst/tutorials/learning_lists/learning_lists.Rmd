@@ -11,6 +11,15 @@ library(tidyverse)
 library(purrr)
 library(palmerpenguins)
 data(penguins)
+dfs <- readRDS("data/list_structure.rds")
+
+get_first_element <- function(input_list){
+  return(input_list[[1]])
+}
+
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
 ```
 
 ## Learning Objectives
@@ -58,6 +67,8 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 
 names(my_list)
 ```
+
+## Accessing Elements of Lists
 
 We can access a single element in the list using a name and `$`:
 
@@ -115,6 +126,18 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 length(-------)
 ```
 
+```{r list8-solution}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+# all of these are acceptable
+length(my_list[[1]])
+length(my_list$cat_names)
+length(my_list[["cat_names"]])
+
+```
+
 
 ### `purrr::pluck()`
 
@@ -137,7 +160,7 @@ Try the following code. What did it return?
 
 Did it return a `data.frame`, or a vector?
 
-```{r}
+```{r pluck2, exercise=TRUE}
 penguins %>%
   pluck("species")
 ```
@@ -147,7 +170,7 @@ penguins %>%
 
 The slots in a `list` are not fixed. We can take an already made list and add a new slot to it using `<-`:
 
-```{r}
+```{r adding_list, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
                 hedgehog_names = "Spiny", 
                 dog_names = c("Rover", "Spot"))
@@ -158,7 +181,7 @@ my_list
 ```
 
 
-### *homogeneous* versus *heterogeneous* lists
+## *homogeneous* versus *heterogeneous* lists
 
 When we automate a repetitive process, we usually assume that the lists that we process are *homogeneous*. That is, the data type of the list element is the same for each slot in the list. In our case, usually the data.type will be a `data.frame`
 
@@ -197,11 +220,15 @@ output_model
 
 ### Your Turn
 
-From `output_model`, return the `call` slot.
+From `output_model`, return the `call` slot. What is in it?
 
-```{r}
-output_model$
+```{r call, exercise=TRUE}
+output_model$-------
 
+```
+
+```{r call-solution}
+output_model$call
 ```
 
 
@@ -249,60 +276,65 @@ The function we use is called `map()`. `map()` usually takes two inputs:
 
 Note that we don't call `get_first_element()` with the parentheses. 
 
-```{r}
+```{r get_first2, exercise=TRUE}
 new_list <- map(my_list, get_first_element)
 new_list
 ```
 
 Next time we will use `map()` to load in multiple `data.frame`s from files in a folder.
 
-# Test Yourself
+## Test Yourself
 
-## Question 1 (2 Points)
+### Question 1 (2 Points)
 
 Load the following list using `readRDS()` - an RDS file is a way to save a single R object as a file (you can write them using `saveRDS()`). 
 
 What are the names of slots on the list? (show the function)
 
-```{r}
-dfs <- readRDS("data/list_structure.rds")
+```{r dfs1, exercise=TRUE}
+dfs
 
 
 ```
 
 What is in each slot? Just put your answer below.
 
-## Question 2 (2 Points)
+```{r dfs1-solution}
+dfs
+names(dfs)
+dfs[[1]]
+
+```
+
+
+
+### Question 2 (2 Points)
 
 Use `bind_rows()` on the first and third element of `dfs`:
 
-```{r}
+```{r bind_rows, exercise=TRUE}
 bind_df <- bind_rows(------, -------)
+nrow(bind_df)
 ```
 
-## Question 3 (2 Points)
+```{r bind_rows-solution}
+bind_df <- bind_rows(dfs[[1]], dfs[[3]])
+nrow(bind_df)
+
+```
+
+### Question 3 (2 Points)
 
 Find the maximum `age_at_diagnosis` for `dfs[["smoke_2.xlsx"]]`: (remember, you can use `summarize`)
 
-```{r}
+```{r max_age, exercise=TRUE}
+dfs[["smoke_2.xlsx"]] %>%
+  summarize(max_age = --------------)
+```
 
+```{r max_age-solution}
+dfs[["smoke_2.xlsx"]] %>%
+  summarize(max_age = max(age_at_diagnosis))
 
 ```
 
-## Question 4 (2 Points)
-
-Write a function that finds the maximum `age_at_diagnosis` on a data.frame. Use it on the second element of `dfs`.
-
-```{r}
-find_max_age <- function(df){
-  max_age <- df %>%
-    ---------
-  return()
-}
-
-find_max_age()
-```
-
-## Question 5 (2 Points)
-
-5. Try out a different theme/options for this `html_document`, or make it into a `distill::distill_article`. Add a table of contents and section numbering.
