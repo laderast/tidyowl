@@ -9,8 +9,7 @@ library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(purrr)
-library(palmerpenguins)
-data(penguins)
+penguins <- readRDS("data/penguins.rds")
 dfs <- readRDS("data/list_structure.rds")
 
 get_first_element <- function(input_list){
@@ -287,14 +286,12 @@ Next time we will use `map()` to load in multiple `data.frame`s from files in a 
 
 ### Question 1 (2 Points)
 
-Load the following list using `readRDS()` - an RDS file is a way to save a single R object as a file (you can write them using `saveRDS()`). 
+Check out the `dfs` object below. It is a list, and you need to find out what's in it.
 
 What are the names of slots on the list? (show the function)
 
 ```{r dfs1, exercise=TRUE}
 dfs
-
-
 ```
 
 What is in each slot? Just put your answer below.
