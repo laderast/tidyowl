@@ -41,3 +41,18 @@ learn_purrr <- function(){
   learnr::run_tutorial("learning_purrr", package="tidyowl")
 
 }
+
+
+#' Run the learning lists tutorial
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' if(is.interactive()){
+#'   learn_lists()
+#' }
+learn_lists <- function(){
+  learnr::run_tutorial("learning_lists", package="tidyowl")
+
+}

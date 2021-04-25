@@ -76,6 +76,28 @@ If you don't have R installed, you can run the tutorial online by going to this 
 
 https://mybinder.org/v2/gh/laderast/tidyowl/master?urlpath=shiny/learning_rowwise/
 
+
+## Learning Lists
+
+### Learning Objectives
+
+- **Learn** about lists as a general purpose data structure
+- **Learn** and **utilize** list properties 
+- **Access** list elements using `$` and `[[]]`
+- **Understand** the difference between homogeneous and heterogeneous lists
+- **Use** `purrr::pluck()` to access list elements
+- **Understand** how `data.frames()` are list-like
+- **Understand** how to apply a function to a list using `purrr::map()`.
+
+### Run This Tutorial
+
+To run the learning lists tutorial:
+
+```r
+library(tidyowl)
+learn_lists()
+```
+
 ### Acknowledgements
 
 This tutorial was partially derived and inspired from the following links:

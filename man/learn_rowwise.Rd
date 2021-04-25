@@ -10,10 +10,11 @@ learn_rowwise()
 
 }
 \description{
-This is a convenience function for starting the learning rowwise tutorial
+This is a convenience function for starting the learning rowwise tutorial.
+It runs \code{learnr::run_tutorial()} for the tutorial.
 }
 \examples{
 if(is.interactive()){
-learn_rowwise()
+  learn_rowwise()
 }
 }
