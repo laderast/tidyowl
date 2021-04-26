@@ -1,21 +1,29 @@
 ---
 title: "Learning Functions"
-author: "You"
-date: "2/17/2021"
 output: learnr::tutorial
 runtime: shiny_prerendered
+description: Learn more advanced techniques to select columns
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(palmerpenguins)
+data(penguins)
+
+square_number <- function(number) {
+  output_number <- number * number 
+  return(output_number)
+}
+
 ```
 
-# Learning Objectives
+## Learning Objectives
 
-- *learn* why writing functions saves you repeating yourself
-- *learn* the basic components of a function
-- *write* and *use* a simple function
-- *learn* and *apply* tidyeval to make tidy functions
+- *Learn* about why writing functions saves you from repeating yourself
+- *Learn* the basic components of a function
+- *Write* and *utilize* a simple function
+- *Learn* and *Apply* tidyeval to make tidy functions
 
 ## Don't Repeat Yourself (DRY) - use functions!
 
@@ -37,7 +45,7 @@ Now, we calculate the square of our number and assign it to `output_number`.
 
 The next line uses `return()` to return a value from our function. Then we close the code block with a `}`.
 
-```{r}
+```{r square1, exercise=TRUE}
 square_number <- function(number) {
   output_number <- number * number 
   return(output_number)
@@ -46,37 +54,39 @@ square_number <- function(number) {
 square_number(4)
 ```
 
-## Your Turn
+### Your Turn
 
 Make a function called `cube_number` that returns the cube of a number. Test it out and make sure it works.
 
 Hint: you can find the cube of a number using `num^3`.
 
-```{r}
+```{r cube, exercise=TRUE}
 cube_number <- function(num){
   output_number <- -----------
   return(output_number)
 }
 ```
 
+```{r cube-solution}
+cube_number <- function(num){
+  output_number <- num^3
+  return(output_number)
+}
+```
 
-# Functions: Checking for Errors with `if()`
+
+## Functions: Checking for Errors with `if()`
 
 What about when someone tries `square_number("two")`? Since "two" is a character, you can't multiply with it. We probably want them to know that this isn't what we are expecting.
-
-```{r}
-square_number("two")
-```
 
 We can use `if()` as a way to check if the value of `number` is actually numeric. 
 
 `if()` statements check for a condition in the parentheses, and then execute code in the {} (curly brackets) if true.
 
-What does this look like? Remember `case_when()`?
-
-```{r}
+```{r testing, exercise=TRUE, eval=FALSE}
 square_number_improved <- function(number) {
-  if(!is.numeric(number)){ #check for whether number is numeric
+  #check for whether number is numeric
+  if(!is.numeric(number)){ 
     stop("Your input was not a number")
   }
 
@@ -85,14 +95,10 @@ square_number_improved <- function(number) {
   
 }
 
-square_number_improved(2)
-
 square_number_improved("two")
 ```
 
-
-
-## Do You Need to Check for All Errors?
+### Do You Need to Check for All Errors?
 
 It depends on who uses your functions. If they are just for you and your lab, as long as everyone understands what goes into the functions, you probably don't need to anticipate all kinds of errors, just a few major ones.
 
@@ -100,82 +106,82 @@ It's when you are releasing your software as a freely available package that you
 
 
 
-# When should you write a function?
+## When should you write a function?
 
 Programmers have an acronym: DRY, which is short for "Don't Repeat Yourself".
 
 If you plan to do something multiple times, then you should probably think of writing a function.
 
 
-## Practical Example of a Function
+### Practical Example of a Function
 
 
-```{r}
+```{r count_categories, exercise = TRUE}
 count_categories <- function(df){
   counts <- df %>%
-    count(disease)
+    count(species)
   
   return(counts)
 }
 
-```
-
-```{r}
-count_categories(smoke_complete)
-
+count_categories(penguins)
 ```
 
 This might be useful if you needed to summarize these disease across a large number of files.
 
-One thing you might notice is that `disease` is hard coded. There is a way to make this more flexible using something called `tidyeval`, which we will learn about next time.
+One thing you might notice is that `disease` is hard coded. There is a way to make this more flexible using something called `tidyeval`.
 
-# The magic of `{tidyeval}`
+### The magic of `tidyeval`
 
-```{r}
-count_column <- function(df, column = disease){
+What if we wanted to change the column that we counted? We can use the `{{}}` (curly-curly) notation to use the column name in our function.
+
+`{{}}` is part of the `{rlang}` package and it allows us to put in a column name. There are two problems with using a column name without quotes in R: 
+
+1. It doesn't exist as an object, so R will return an object `not found` error if you use it as an input to an argument.
+2. It only makes sense in the context of the `data.frame` you provide, so R has to *delay* evaluating it until is "reaches" the `data.frame`.
+
+Curly-curly accomplishes both of these tasks. (Trust me, it was much harder to do this before curly-curly!)
+
+Here, our default argument to `column` is `disease`. But, we can change it.
+
+```{r curly_curly1, exercise=TRUE}
+count_variable <- function(df, column = species){
   
   df %>%
     count( {{column}} )
   
 }
 
-count_column(smoke_complete, column = tumor_stage)
-```
-
-```{r}
-
-
+count_variable(penguins, column = island)
 ```
 
 
-# Exercises
+### Using `{{}}` as an argument name: `:=`
 
-## `load_files()`
+If you wanted to use your column name as an argument name in a `mutate` statement, you'll need to use `:=` instead of `=` to assign it. 
 
-What does the function `load_files()` do? 
-
-```{r}
-load_files <- function(path="data/smoke_1.xlsx"){
-  out_frame <- readxl::read_excel(path, sheet = 1)
-  out_frame <- janitor::clean_names(out_frame)
-  return(out_frame)
+```{r curly_curly2, exercise=TRUE}
+mutate_column <- function(df, new_column_name=new_stuff) {
+  
+  df %>%
+    mutate({{new_column_name}} := "new_stuff")
 }
+
+mutate_column(penguins[,1:3], new_column_name = my_new_stuff)
 ```
 
-Write up an example here (You can use one of the excel files in the `data` folder).
 
-```{r}
+## Test Yourself
 
-```
-
-## Count Columns
+### Count Columns
 
 Write a function called `count_columns()` that takes a `data.frame` as input and returns the number of columns in the `data.frame` (you can use `ncol()` to count the number of columns in a data.frame()). If `df` isn't a `data.frame`, then have the function `stop()` and tell the user that they didn't input a `data.frame`.
 
-```{r}
+```{r count_columns, exercise = TRUE}
 count_columns <- function(df){
+
   if(!is.data.frame(df)){
-    
+      
   }
   
   number_of_cols <- --------------
@@ -183,10 +189,17 @@ count_columns <- function(df){
 }
 ```
 
-Show an example of your function in use:
-
-```{r}
-
+```{r count_columns-solution}
+count_columns <- function(df){
+  if(!is.data.frame(df)){
+        stop("your input is not a data.frame") 
+  }
+  
+  number_of_cols <- ncol(df)
+  return(number_of_cols)
+}
 ```
 
+
+### tidyeval exercise 1
 
