@@ -10,16 +10,71 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(palmerpenguins)
 data(penguins)
-library(here)
+library(purrr)
+
+
+# library(here)
+# 
+# load_files <- function(path){
+#   out_frame <- readxl::read_excel(path, na="NA", sheet=1)
+#   out_frame <- janitor::clean_names(out_frame) %>%
+#     mutate(source=path)
+#   return(out_frame)
+# }
+# 
+# 
+# file_names <- list.files(here("inst", "tutorials", "learning_purrr" ,"data"), full.names=FALSE, pattern = ".xlsx")
+# all_files <- list.files(here("inst", "tutorials", "learning_purrr" ,"data"), full.names=TRUE, include.dirs = TRUE, pattern="xlsx")
+# 
+# df_list <- map(all_files, load_files)
+# names(df_list) <-  c("smoke_1.xlsx", "smoke_2.xlsx", "smoke_3.xlsx")
+# 
+# saveRDS(df_list, here("inst", "tutorials", "learning_purrr" ,"data", "df_list.rds") )
+
+species_names <- unlist(group_keys(penguins_grouped))
+species_names
+
+
+penguins_grouped <- penguins %>%
+  group_by(species)
+
+names(penguins_by_species) <- species_names
+
+
+penguins_by_species <- group_split(penguins_grouped, .keep=TRUE)
+
+file_list <- readRDS(here("inst/tutorials/learning_purrr","data/df_list.rds")
+
+run_model <- function(df){
+  species <- df$species[1]
+  out_model <- lm(bill_length_mm ~ bill_depth_mm, data=df)
+  out_results <- broom::tidy(out_model) %>% mutate(species=species) %>%
+    relocate(species)
+  return(out_results)
+}
+
+
+build_scatterplot <- function(df){
+  species <- df$species[1]
+  
+  ggplot(df) +
+    aes(x = bill_depth_mm, y=bill_length_mm) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    labs(title=species)
+}
+
+
 ```
 
 # Learning Objectives
 
--   **Load** multiple files into a list
--   **Write** and **use** functions that can be applied (or `map`ped) to elements of a list
+-   **Write** and **use** functions that can be applied (or `map`ped) to elements of a `list`
 -   **Split** and **name** a list of `data.frame`s using `group_split()`
 -   **Consolidate** elements of a list using `reduce()`.
 -   **Write** a function that fails gracefully with `map()` using `possibly()`.
+
+## Prequisites
 
 ## The Basic Idea
 
@@ -27,16 +82,14 @@ For most of today, we're going to be taking a list of `data.frame`s and doing so
 
 We're going to explore two examples of using `map()`. This is the first example.
 
-1. Make a list of file names using `list.files()`
-2. Load the individual data frames into a list using `map()`
-3. Write a function that works on one of the elements (a `data.frame`) in our list
-4. Use `map()` to apply that function to each element in our list, return a a new list
-5. If necessary, aggregate the final results in our final list into a `data.frame`.
+1. Write a function that works on one of the elements (a `data.frame`) in our list. We'll write a function that generates a ggplot from a data frame.
+2. Use `map()` to apply that function to each element in our list, return a a new list
+3. Display every element of the new list.
 
 
 The second example is:
 
-1. Take a `data.frame`, and split it into smaller `data.frame`s in a list.
+1. Take a `data.frame`, and split it into smaller `data.frame`s in a list by a factor.
 2. Write a function that works on one of the slots in the list. In this case, we'll be building a linear model.
 3. Use `map()` to apply that function to each of the smaller `data.frame`s in our list
 4. Get the linear model results out and aggregate our results using a `data.frame`
@@ -47,37 +100,23 @@ The second example is:
 
 If you do something in R once and have to do it again, it's probably best to think of how to do it well once, rather than cutting and pasting again.
 
-For example, say that you have multiple files that have the same format and you want to load them all into R, and glue them into a single dataset.
+For example, say that you have multiple data.frames in a list (after loading them from a folder of csv files using a package such as `{vroom}`).
 
 Part of doing this is by using and writing *functions*. We can take code that we might have to write 10 times in a row, and package it in a way that we can use it multiple times.
 
-```{r}
-load_files <- function(path){
-  out_frame <- readxl::read_excel(path, na="NA", sheet=1)
-  out_frame <- janitor::clean_names(out_frame) %>%
-    mutate(source=path)
-  return(out_frame)
+```{r plot_frame1, exercise=TRUE}
+plot_frame <- function(df){
+  ggplot(df) + 
+    aes(x=tumor_stage) +
+    geom_bar() +
+    theme(axis.text.x=element_text(angle=90))
 }
-smoke1 <- load_files("data/smoke_1.xlsx")
-smoke1
+
+plot1 <- plot_frame(file_list[[1]])
+plot1
 ```
 
-We will use `list.files()` to grab all of the `.xlsx` files in our `data/` directory.
-
-We use the `pattern` argument to only grab the `.xlsx` files, and we need to use `full.names` argument to get the folder names as well.
-
-```{r eval=FALSE}
-files_to_load <- list.files(path=here("data/"), pattern = "xlsx", full.names = TRUE)
-files_to_load
-```
-
-Note that these are absolute paths, but it's ok because we are in a project.
-
-Now we can utilize our `load_files()` function that takes these file locations (or paths) as an argument for this function.
-
-```{r eval=FALSE}
-load_files(files_to_load[1])
-```
+We will use `plot_frame()` to plot each of the data.frames in our list `file_list`.
 
 
 # purrr::map()
@@ -92,18 +131,18 @@ Enter the `purrr` package and `map()`.
 
 The way to read a `map()` statement is:
 
-    `map(.x = files_to_load, .f = load_files)` 
+    `map(.x = file_list, .f = plot_frame)` 
 
 > We're going to apply (map) our function 
 >
-> `load_files(),`
+> `plot_frame(),`
 >
-> to each element of the `list` called `files_to_load`.
+> to each element of the `list` called `file_list`.
 
 
-```{r}
-file_list <- purrr::map(.x = files_to_load, .f = load_files)
-names(file_list) <- files_to_load
+```{r plot_list_map, exercise=TRUE}
+plot_list <- purrr::map(.x = file_list, .f = plot_frame)
+names(plot_list) <- names(file_list) 
 ```
 
 ## Your Turn
@@ -112,8 +151,10 @@ What is the output of `purrr::map()` below? Is it a list?
 
 If it is a list, what is in each slot?
 
-```{r}
-file_list
+```{r class1, exercise=TRUE}
+class(plot_list)
+
+class(plot_list[[1]])
 ```
 
 ```{r}
@@ -131,7 +172,7 @@ Use `map()` to return the `length` of each of the elements in `my_list`.
 
 Remember that you don't want to put the `()` after the function name.
 
-```{r}
+```{r map_length, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
                 hedgehog_names = "Spiny", 
                 dog_names = c("Rover", "Spot"))
@@ -139,6 +180,18 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_lengths <- map(.x = my_list, .f = ------)
 my_lengths
 ```
+
+
+```{r map_length-solution}
+my_list <- list(cat_names = c("Morris", "Julia"), 
+                hedgehog_names = "Spiny", 
+                dog_names = c("Rover", "Spot"))
+
+my_lengths <- map(.x = my_list, .f = length)
+my_lengths
+```
+
+
 
 ## Passing in multiple parameters
 
@@ -174,12 +227,12 @@ The big difference between `map()` and `reduce()` has to do with what it returns
 > The goal of `reduce` is to take a list of items and return a single object.
 
 
-```{r}
+```{r reduce1, exercise=TRUE}
 bound_file <- purrr::reduce(file_list, dplyr::bind_rows) 
 dim(bound_file)
 ```
 
-```{r}
+```{r reduce2, exercise=TRUE}
 bound_file
 ```
 
@@ -190,11 +243,15 @@ What is going on here? `bind_rows()` is first applied to the first two slots: fi
 
 Use `purrr::reduce` to find the total number of rows in all three files using `sum`.
 
-```{r}
+```{r reduce3, exercise=TRUE}
 file_rows <- purrr::map(file_list2, nrow)
 purrr::reduce(file_rows, -----)
 ```
 
+```{r reduce3-solution}
+file_rows <- purrr::map(file_list2, nrow)
+purrr::reduce(file_rows, sum)
+```
 
 
 
@@ -202,7 +259,7 @@ purrr::reduce(file_rows, -----)
 
 We might want to build a summary of each table that we've loaded in `file_list`.
 
-```{r}
+```{r make_table, exercise=TRUE}
 make_table <- function(df){
   df %>%
     janitor::tabyl(tumor_stage, vital_status)
@@ -213,19 +270,22 @@ make_table(file_list[[1]])
 
 Running it on all of the elements in our list:
 
-```{r}
+```{r make_table2, exercise=TRUE}
 out_list <- map(file_list, make_table)
 
 out_list
 ```
 ### Your Turn
 
-Show the table in `out_list` with the slot name of "/cloud/project/data//smoke_3.xlsx":
+Show the table in `out_list` with the slot name of "smoke_3.xlsx":
 
-```{r}
+```{r out_list, exercise=TRUE}
 out_list[[""]]
 ```
 
+```{r out_list-solution}
+out_list[["smoke_3.xlsx"]]
+```
 
 
 
@@ -248,7 +308,7 @@ Sometimes it is easier to split the data.frame into a list and work from there.
 
 Here we're using `group_split()` - which separates your data out into a list by your grouping variables.
 
-```{r}
+```{r penguin_group, exercise=TRUE}
 penguins_grouped <- penguins %>%
   group_by(species)
 
@@ -259,7 +319,7 @@ penguins_by_species
 
 This is almost good. We need to name each slot as well. We can grab that using the `group_keys()` function 
 
-```{r}
+```{r penguin_group2, exercise=TRUE}
 species_names <- unlist(group_keys(penguins_grouped))
 species_names
 
@@ -270,7 +330,7 @@ penguins_by_species
 
 Now, let's do something with each of the `data.frame`s in our list. 
 
-```{r}
+```{r build_scatterplot, exercise=TRUE}
 build_scatterplot <- function(df){
   species <- df$species[1]
   
@@ -286,7 +346,7 @@ build_scatterplot(penguins_by_species[["Gentoo"]])
 
 We've confirmed that our function works on one of our slots, so now we can `map()` it to our other slots!
 
-```{r}
+```{r build_scatterplot2, exercise=TRUE}
 plot_list <- map(penguins_by_species, build_scatterplot)
 plot_list
 ```
@@ -295,7 +355,7 @@ Let's do the same thing for modeling. We're going to write a function called `ru
 
 We want to model `bill_length_mm` as a function of `bill_depth_mm` in our linear model.
 
-```{r}
+```{r run_model1, exercise=TRUE}
 run_model <- function(df){
   species <- df$species[1]
   out_model <- lm(bill_length_mm ~ bill_depth_mm, data=df)
@@ -315,15 +375,22 @@ Use `map()` to apply `run_model()` on `penguins_by_species`. What does it contai
 
 Remember that you don't want to use parentheses `()` after `run_model`.
 
-```{r}
+```{r run_model2, exercise=TRUE}
 model_list <- map(penguins_by_species, --------)
 
 model_list
 ```
 
+```{r run_model2-solution}
+model_list <- map(penguins_by_species, run_model)
+
+model_list
+```
+
+
 Try using `map_df()` to do the same thing to `penguins_by_species()` - what did it return?
 
-```{r}
+```{r run_model3, exercise=TRUE}
 model_df <- map_df(penguins_by_species, run_model)
 
 model_df
@@ -343,14 +410,14 @@ There are a lot of `map_` functions, as you can see if you type in `map_:`
   - your function should return a `double`
 -   `map_df`() - function should return a `data.frame`
 
-The main difference between these is that they are *strict*: if you function doesn't return the desired data type, it will return an error.
+The main difference between these functions and `map()` is that they are *strict*: if you function doesn't return the desired data type, it will return an error.
 
 If we know what data type we want to return, we can use one of the `map_*` functions. We know that the lengths should return `integer`, so let's use `map_int().`
 
 Check the class of `lengths2` - is it a `list` or a `vector`?
 
 
-```{r}
+```{r lengths2, exercise=TRUE}
 lengths2 <- map_int(my_list, length)
 lengths2
 ```
@@ -358,7 +425,7 @@ lengths2
 One of the most important variants is `map_df()` - it will return a single data.frame, instead of a list. So, it can be handy, and help you skip using a `reduce()` step.
 
 ```{r}
-file_list <- purrr::map_df(files_to_load, load_files)
+file_list <- purrr::map_df(file_list, run_model)
 file_list
 ```
 
@@ -372,24 +439,24 @@ Why do this? It's good coding practice, because you're guaranteeing that you wil
 We might have a list of objects where one of the elements is *faulty*. Maybe there's no data in it, only a big `NA`. That is what `possibly()` is for. Let's add an element to `files_to_load` that isn't a file path:
 
 ```{r}
-files_to_load3 <- c("blah", files_to_load)
+files_to_load3 <- c("blah", file_list)
 files_to_load3
 ```
 
 If we `map` `load_files()` on this vector, we're going to get an error, because there is no file called `blah`:
 
 ```{r}
-test <- map(files_to_load3, load_files)
+test <- map(files_to_load3, plot_frame)
 ```
 
 Arrgh, it stopped at the first element! How can we fail gracefully?
 
-We need to use `possibly()` to *wrap* around our function. We first need to define new function called `load_files_possibly()`. 
+We need to use `possibly()` to *wrap* around our function. We first need to define a new function called `load_files_possibly()`. 
 
 The second argument (`otherwise`) is what the function will return if there's an error. In our case, we'll return a NULL.
 
 ```{r}
-load_files_possibly <- possibly(.f = load_files, otherwise = NULL)
+plot_frame_possibly <- possibly(.f = plot_frame, otherwise = NULL)
 
 load_files_possibly(files_to_load3[1])
 ```
@@ -399,10 +466,12 @@ You can see that it returns a `NULL` value rather than returning an error.
 Now we can use `load_files_safely()` on our list:
 
 ```{r}
-file_list <- map(files_to_load3, load_files_possibly)
-file_list
+plot_list <- map(files_to_load3, plot_frame_possibly)
+plot_list
 ```
 
+
+[to-fix]
 The nice thing about returning `NULL` instead of an error here is that we can continue to work. That is, the `NULL` value won't affect our `reduce()` or `map_df()`:
 
 ```{r}

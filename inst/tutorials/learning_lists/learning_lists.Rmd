@@ -62,7 +62,7 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list
 ```
 
-`my_list` has some properties and ways to access things in it that are really useful. The first is that `my_list` has a `length()`
+`my_list` has some properties and ways to access things in it that are really useful. The first is that `my_list` has a `length()`:
 
 ```{r list2, exercise=TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 
@@ -114,7 +114,7 @@ my_list <- list(cat_names = c("Morris", "Julia"),
 my_list[["hedgehog_names"]]
 ```
 
-The main advantage using this as an accessor is that you can pass in a `character` vector in, which is handy for programming.
+The main advantage using this as an accessor is that you can pass in a `character` value, which is handy for programming.
 
 ```{r list7, exercise = TRUE}
 my_list <- list(cat_names = c("Morris", "Julia"), 

@@ -2,7 +2,6 @@
 title: "Learning Functions"
 output: learnr::tutorial
 runtime: shiny_prerendered
-description: Learn more advanced techniques to select columns
 ---
 
 ```{r setup, include=FALSE}
@@ -10,18 +9,19 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(palmerpenguins)
 data(penguins)
+library(learnr)
 
 square_number <- function(number) {
   output_number <- number * number 
   return(output_number)
 }
-
 ```
 
 ## Learning Objectives
 
 - *Learn* about why writing functions saves you from repeating yourself
 - *Learn* the basic components of a function
+- *Supply* default arguments to a function
 - *Write* and *utilize* a simple function
 - *Learn* and *Apply* tidyeval to make tidy functions
 
@@ -33,17 +33,35 @@ For example, say that you have multiple files that have the same format and you 
 
 Part of doing this is by using and writing *functions*. We can take code that we might have to write 10 times in a row, and package it in a way that we can use it multiple times.
 
+
+### Anatomy of a Function
+
 Let's learn about how we define a function.
 
 In this line, we define our function by giving it a name, `square_number`, and defining its *arguments* using `function()`. Our function only has one argument, `number`.
 
-    square_number <- function(number) {
+```
+square_number <- function(number) {
+```
+
+The `function()` and everything that goes into it is called the **signature** - it defines what arguments the function needs to run.
 
 What about the `{`? It defines the beginning of a *code block* - a code block defines the code that will run when we use the function.
 
-Now, we calculate the square of our number and assign it to `output_number`.
+Now, we calculate the square of our number and assign it to `output_number`:
+
+```
+output_number <- number * number
+```
 
 The next line uses `return()` to return a value from our function. Then we close the code block with a `}`.
+
+
+```
+return(output_number)
+}
+```
+
 
 ```{r square1, exercise=TRUE}
 square_number <- function(number) {
@@ -54,9 +72,25 @@ square_number <- function(number) {
 square_number(4)
 ```
 
+### Default Values
+
+You may want an argument to have a *default* value. This is really useful for simplifying using the function, but also giving people the option to not use defaults.
+
+You can supply this in the function signature. Here, our default value for the `number` argument is 6:
+
+```{r square2, exercise=TRUE}
+square_number <- function(number = 6) {
+  output_number <- number * number 
+  return(output_number)
+}
+
+square_number()
+```
+
+
 ### Your Turn
 
-Make a function called `cube_number` that returns the cube of a number. Test it out and make sure it works.
+Make a function called `cube_number` that returns the cube of a number. Test it out and make sure it works. 
 
 Hint: you can find the cube of a number using `num^3`.
 
@@ -73,6 +107,8 @@ cube_number <- function(num){
   return(output_number)
 }
 ```
+
+
 
 
 ## Functions: Checking for Errors with `if()`
@@ -104,6 +140,7 @@ It depends on who uses your functions. If they are just for you and your lab, as
 
 It's when you are releasing your software as a freely available package that you should think about doing extensive testing for errors, especially the functions you anticipate will be used by most people who use your software.
 
+For more information on this, please refer to the section on testing in Advanced R.
 
 
 ## When should you write a function?
@@ -131,11 +168,13 @@ This might be useful if you needed to summarize these disease across a large num
 
 One thing you might notice is that `disease` is hard coded. There is a way to make this more flexible using something called `tidyeval`.
 
-### The magic of `tidyeval`
+## The magic of `tidyeval`
 
 What if we wanted to change the column that we counted? We can use the `{{}}` (curly-curly) notation to use the column name in our function.
 
-`{{}}` is part of the `{rlang}` package and it allows us to put in a column name. There are two problems with using a column name without quotes in R: 
+### What is curly-curly?
+
+`{{}}` is part of the `{rlang}` package and it allows us to put in a column name as a value to an argument, much like we've seen with functions like `dplyr::mutate()` and `dplyr::filter()` in the `tidyverse`. There are two problems with using a column name without quotes in R: 
 
 1. It doesn't exist as an object, so R will return an object `not found` error if you use it as an input to an argument.
 2. It only makes sense in the context of the `data.frame` you provide, so R has to *delay* evaluating it until is "reaches" the `data.frame`.
@@ -164,12 +203,13 @@ If you wanted to use your column name as an argument name in a `mutate` statemen
 mutate_column <- function(df, new_column_name=new_stuff) {
   
   df %>%
-    mutate({{new_column_name}} := "new_stuff")
+    mutate(
+      {{new_column_name}} := "new_stuff"
+      )
 }
 
 mutate_column(penguins[,1:3], new_column_name = my_new_stuff)
 ```
-
 
 ## Test Yourself
 
@@ -200,6 +240,43 @@ count_columns <- function(df){
 }
 ```
 
+### `tidyeval` exercise 
 
-### tidyeval exercise 1
+Write a function called `get_missing()` that returns all rows in a data.frame `df` that have missing values in a column called `column_name`.
 
+```{r tidyex1, exercise=TRUE} 
+get_nas <- function(df, column_name) {
+  
+  df %>%
+    filter(is.na(-------))
+  
+}
+
+get_nas(penguins, body_mass_g)
+
+```
+
+```{r tidyex1-solution}
+get_nas <- function(df, column_name){
+  
+  df %>%
+    filter(is.na({{column_name}}))
+  
+}
+
+get_nas(penguins, body_mass_g)
+
+```
+
+
+## Acknowledgements/Further Reading
+
+The following links are helpful for going further.
+
+- [SW Carpentry: Intro to functions](https://swcarpentry.github.io/r-novice-inflammation/02-func-R/)
+- [R for Data Science: Functions](https://r4ds.had.co.nz/functions.html)
+- [Advanced R: Functions](http://adv-r.had.co.nz/Functions.html)
+
+If you want to distribute code and functions to others, it's worth learning about writing R packages. 
+
+- [R Packages](https://r-pkgs.org/)
