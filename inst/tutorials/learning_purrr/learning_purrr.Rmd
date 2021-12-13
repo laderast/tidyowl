@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(palmerpenguins)
 data(penguins)
+library(here)
 library(purrr)
 
 
@@ -31,19 +32,18 @@ library(purrr)
 # 
 # saveRDS(df_list, here("inst", "tutorials", "learning_purrr" ,"data", "df_list.rds") )
 
+penguins_grouped <- penguins %>%
+  group_by(species)
+
 species_names <- unlist(group_keys(penguins_grouped))
 species_names
 
-
-penguins_grouped <- penguins %>%
-  group_by(species)
+penguins_by_species <- group_split(penguins_grouped, .keep=TRUE)
 
 names(penguins_by_species) <- species_names
 
 
-penguins_by_species <- group_split(penguins_grouped, .keep=TRUE)
-
-file_list <- readRDS(here("inst/tutorials/learning_purrr","data/df_list.rds")
+file_list <- readRDS(here("inst/tutorials/learning_purrr","data/df_list.rds"))
 
 run_model <- function(df){
   species <- df$species[1]
@@ -157,6 +157,8 @@ class(plot_list)
 class(plot_list[[1]])
 ```
 
+[add mult-choice question]
+
 ```{r}
 knitr::include_graphics("image/map_frosting.png")
 ```
@@ -230,13 +232,13 @@ The big difference between `map()` and `reduce()` has to do with what it returns
 ```{r reduce1, exercise=TRUE}
 bound_file <- purrr::reduce(file_list, dplyr::bind_rows) 
 dim(bound_file)
-```
 
-```{r reduce2, exercise=TRUE}
 bound_file
 ```
 
 What is going on here? `bind_rows()` is first applied to the first two slots: file_list[[1]] and `file_list[[2]]`, producing a new data.frame. It then applies `bind_rows()` to our new data.frame and `file_list[[3]]`, until there are no data.frames left. 
+
+[add animation here]
 
 
 ## Your Turn
@@ -344,7 +346,7 @@ build_scatterplot <- function(df){
 build_scatterplot(penguins_by_species[["Gentoo"]])
 ```
 
-We've confirmed that our function works on one of our slots, so now we can `map()` it to our other slots!
+We've confirmed that our function works on one of our slots, so now we can `map()` it to our other slots in our list!
 
 ```{r build_scatterplot2, exercise=TRUE}
 plot_list <- map(penguins_by_species, build_scatterplot)
@@ -396,7 +398,7 @@ model_df <- map_df(penguins_by_species, run_model)
 model_df
 ```
 
-
+[mult question here]
 
 # `map_*`: Return a specific data type
 
@@ -429,7 +431,7 @@ file_list <- purrr::map_df(file_list, run_model)
 file_list
 ```
 
-Why do this? It's good coding practice, because you're guaranteeing that you will return something in that format.
+Why do this? It's good coding practice, because you're guaranteeing that you will return something in that format. This can definitely help when *integrating* your functions with other packages, like the `tidyverse`.
 
 
 
@@ -438,14 +440,14 @@ Why do this? It's good coding practice, because you're guaranteeing that you wil
 
 We might have a list of objects where one of the elements is *faulty*. Maybe there's no data in it, only a big `NA`. That is what `possibly()` is for. Let's add an element to `files_to_load` that isn't a file path:
 
-```{r}
+```{r possibly1, exercise=TRUE}
 files_to_load3 <- c("blah", file_list)
 files_to_load3
 ```
 
 If we `map` `load_files()` on this vector, we're going to get an error, because there is no file called `blah`:
 
-```{r}
+```{r possibly2, exercise=TRUE}
 test <- map(files_to_load3, plot_frame)
 ```
 
@@ -455,7 +457,7 @@ We need to use `possibly()` to *wrap* around our function. We first need to defi
 
 The second argument (`otherwise`) is what the function will return if there's an error. In our case, we'll return a NULL.
 
-```{r}
+```{r possibly3, exercise=TRUE}
 plot_frame_possibly <- possibly(.f = plot_frame, otherwise = NULL)
 
 load_files_possibly(files_to_load3[1])
@@ -465,7 +467,7 @@ You can see that it returns a `NULL` value rather than returning an error.
 
 Now we can use `load_files_safely()` on our list:
 
-```{r}
+```{r possibly4, exercise=TRUE}
 plot_list <- map(files_to_load3, plot_frame_possibly)
 plot_list
 ```
@@ -474,13 +476,13 @@ plot_list
 [to-fix]
 The nice thing about returning `NULL` instead of an error here is that we can continue to work. That is, the `NULL` value won't affect our `reduce()` or `map_df()`:
 
-```{r}
+```{r null_example, exercise=TRUE}
 out_frame <- reduce(file_list, bind_rows)
 
 out_frame
 ```
 
-```{r}
+```{r null_example2, exercise=TRUE}
 out_frame <- map_df(files_to_load3, load_files_possibly)
 out_frame
 ```
@@ -540,7 +542,7 @@ purrr::map(penguins_by_species,
              ~mean(.$bill_depth_mm, na.rm  = TRUE))
 ```
 
-
+[mult choice here]
 
 # Where Next?
 
