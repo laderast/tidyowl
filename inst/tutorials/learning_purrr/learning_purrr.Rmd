@@ -53,6 +53,10 @@ run_model <- function(df){
   return(out_results)
 }
 
+my_list2 <- list(vec1 = c(10, 133, 1, NA), 
+                 vec2 = c(11, 12, NA, 4), 
+                 vec3 = c(1, 5, NA, 4)
+                 )
 
 build_scatterplot <- function(df){
   species <- df$species[1]
@@ -64,6 +68,19 @@ build_scatterplot <- function(df){
     labs(title=species)
 }
 
+plot_frame <- function(df){
+  ggplot(df) + 
+    aes(x=tumor_stage) +
+    geom_bar() +
+    theme(axis.text.x=element_text(angle=90))
+}
+
+make_table <- function(df){
+  df %>%
+    janitor::tabyl(tumor_stage, vital_status)
+}
+
+out_list <- map(file_list, make_table)
 
 ```
 
@@ -95,6 +112,9 @@ The second example is:
 4. Get the linear model results out and aggregate our results using a `data.frame`
 
 
+# Functions Review
+
+I highly suggest that you go through `learning_functions()` before you proceed further.
 
 ## Don't Repeat Yourself (DRY) - use functions!
 
@@ -105,6 +125,8 @@ For example, say that you have multiple data.frames in a list (after loading the
 Part of doing this is by using and writing *functions*. We can take code that we might have to write 10 times in a row, and package it in a way that we can use it multiple times.
 
 ```{r plot_frame1, exercise=TRUE}
+library(ggplot2)
+
 plot_frame <- function(df){
   ggplot(df) + 
     aes(x=tumor_stage) +
@@ -122,7 +144,7 @@ We will use `plot_frame()` to plot each of the data.frames in our list `file_lis
 # purrr::map()
 
 ```{r}
-knitr::include_graphics("image/purrr_cat.png")
+knitr::include_graphics(here("inst/tutorials/learning_purrr", "image/purrr_cat.png"))
 ```
 
 Enter the `purrr` package and `map()`.
@@ -158,6 +180,8 @@ class(plot_list[[1]])
 ```
 
 [add mult-choice question]
+
+# Applying functions using `map`
 
 ```{r}
 knitr::include_graphics("image/map_frosting.png")
@@ -246,12 +270,12 @@ What is going on here? `bind_rows()` is first applied to the first two slots: fi
 Use `purrr::reduce` to find the total number of rows in all three files using `sum`.
 
 ```{r reduce3, exercise=TRUE}
-file_rows <- purrr::map(file_list2, nrow)
+file_rows <- purrr::map(file_list, nrow)
 purrr::reduce(file_rows, -----)
 ```
 
 ```{r reduce3-solution}
-file_rows <- purrr::map(file_list2, nrow)
+file_rows <- purrr::map(file_list, nrow)
 purrr::reduce(file_rows, sum)
 ```
 
@@ -299,7 +323,6 @@ We will then use `map()` to do two things.
 
 1. Make a ggplot() for each slot
 2. Run a linear model for each slot
-
 
 
 ## Chopping up a data frame by group: `group_split()`
@@ -420,15 +443,15 @@ Check the class of `lengths2` - is it a `list` or a `vector`?
 
 
 ```{r lengths2, exercise=TRUE}
-lengths2 <- map_int(my_list, length)
+lengths2 <- map_int(penguins_by_species, nrow)
 lengths2
 ```
 
 One of the most important variants is `map_df()` - it will return a single data.frame, instead of a list. So, it can be handy, and help you skip using a `reduce()` step.
 
 ```{r}
-file_list <- purrr::map_df(file_list, run_model)
-file_list
+penguin_models <- purrr::map_df(penguins_by_species, run_model)
+penguin_models
 ```
 
 Why do this? It's good coding practice, because you're guaranteeing that you will return something in that format. This can definitely help when *integrating* your functions with other packages, like the `tidyverse`.
@@ -460,7 +483,7 @@ The second argument (`otherwise`) is what the function will return if there's an
 ```{r possibly3, exercise=TRUE}
 plot_frame_possibly <- possibly(.f = plot_frame, otherwise = NULL)
 
-load_files_possibly(files_to_load3[1])
+plot_frame_possibly(files_to_load3[1])
 ```
 
 You can see that it returns a `NULL` value rather than returning an error.
@@ -483,7 +506,7 @@ out_frame
 ```
 
 ```{r null_example2, exercise=TRUE}
-out_frame <- map_df(files_to_load3, load_files_possibly)
+out_frame <- map_df(files_to_load3, nrow)
 out_frame
 ```
 
